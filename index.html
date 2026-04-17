@@ -1432,7 +1432,10 @@ function startCanvasDecode(video) {
     detector.detect(canvas).then(codes => {
       if (!scannerActive) return;
       if (codes.length > 0) {
-        onBarcodeFound(codes[0].rawValue, codes[0].format);
+        // Ưu tiên barcode 1D (CODE_128, CODE_39) hơn QR Code
+        const priority1D = ['code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf'];
+        const best = codes.find(c => priority1D.includes((c.format||'').toLowerCase())) || codes[0];
+        onBarcodeFound(best.rawValue, best.format);
       } else {
         requestAnimationFrame(tick);
       }
@@ -1447,6 +1450,17 @@ function onBarcodeFound(code, format) {
 
   // Dừng ZXing reader nếu đang dùng
   if (codeReader && codeReader.stopAsyncDecode) codeReader.stopAsyncDecode();
+
+  // Nếu QR Code chứa dạng "xxx/TênThiếtBị/SerialNumber", trích xuất phần Serial cuối
+  const fmtLower = (format || '').toString().toLowerCase().replace(' ', '_');
+  if (fmtLower === 'qr_code' && code.includes('/')) {
+    const parts = code.split('/');
+    const lastPart = parts[parts.length - 1].trim();
+    // Dùng phần cuối nếu trông giống serial: không khoảng trắng, độ dài 4–30 ký tự
+    if (lastPart && lastPart.length >= 4 && lastPart.length <= 30 && !/\s/.test(lastPart)) {
+      code = lastPart;
+    }
+  }
 
   lastScannedCode = code;
   const viewport = document.getElementById('scannerViewport');
