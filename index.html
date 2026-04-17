@@ -805,6 +805,45 @@ th.active-sort .sort-icon {
     padding: 1px 6px; border-radius: 10px; margin-left: 6px;
   }
 
+  /* ====== EDIT FORM ====== */
+  .edit-group { margin-bottom: 20px; }
+  .edit-group-title {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px;
+    color: var(--accent); font-weight: 700; text-transform: uppercase;
+    margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  }
+  .edit-row {
+    display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px;
+    align-items: center; margin-bottom: 10px;
+  }
+  .edit-label {
+    font-size: 11px; color: var(--text-secondary); font-weight: 500;
+    text-align: right; padding-right: 4px;
+  }
+  .edit-input, .edit-select, .edit-textarea {
+    background: var(--bg-card); border: 1px solid var(--border);
+    color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;
+    padding: 7px 10px; border-radius: var(--radius); outline: none;
+    width: 100%; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .edit-textarea { resize: vertical; min-height: 56px; font-family: var(--font-main); }
+  .edit-input:focus, .edit-select:focus, .edit-textarea:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,212,255,0.12);
+  }
+  .edit-readonly {
+    font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
+    padding: 7px 0; opacity: 0.7;
+  }
+  .edit-setup-warn {
+    background: rgba(255,179,0,0.08); border: 1px solid rgba(255,179,0,0.3);
+    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px;
+    font-size: 12px; color: var(--warn); line-height: 1.6;
+  }
+  .edit-setup-warn code {
+    background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;
+    font-size: 11px; color: var(--accent);
+  }
+
   ::-webkit-scrollbar-track { background: var(--bg-base); }
   ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
@@ -1242,9 +1281,33 @@ th.active-sort .sort-icon {
         <div class="modal-id" id="modalId"></div>
         <div class="modal-name" id="modalName"></div>
       </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="toolbar-btn primary" id="editBtn" onclick="openEdit()" style="font-size:12px;padding:5px 12px">✏️ Sửa</button>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
     </div>
     <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ====== EDIT OVERLAY ====== -->
+<div class="modal-overlay" id="editOverlay" onclick="closeEdit(event)" style="z-index:1100">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:640px;max-height:90vh">
+    <div class="modal-header">
+      <div>
+        <div class="modal-id" id="editModalId"></div>
+        <div class="modal-name">✏️ Chỉnh sửa thông tin</div>
+      </div>
+      <button class="modal-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="modal-body" id="editFormBody" style="padding:16px;overflow-y:auto;max-height:calc(90vh - 140px)"></div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
+      <button class="toolbar-btn primary" id="saveBtn" onclick="saveEdit()" style="flex:1;justify-content:center;padding:9px">
+        💾 Lưu thay đổi
+      </button>
+      <button class="toolbar-btn" onclick="closeEdit()" style="flex:0 0 auto">Hủy</button>
+      <span id="saveStatus" style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)"></span>
+    </div>
   </div>
 </div>
 
@@ -1543,6 +1606,13 @@ document.addEventListener('keydown', e => {
 const SHEET_ID = '1mTLlySjjAtOZm9Gea0rPSTS-xm3_28xf';
 const GID = '571226527';
 
+// ── Điền URL sau khi deploy Apps Script ──────────────────────
+// Hướng dẫn: script.google.com → New project → dán Code.gs → Deploy → Web app
+// Execute as: Me | Who has access: Anyone → Copy URL dán vào đây
+const APPS_SCRIPT_URL = '';          // ← VD: 'https://script.google.com/macros/s/AKfy.../exec'
+const EDIT_SECRET     = 'SNOC2_SECRET_2024'; // ← Phải khớp với SECRET trong Code.gs
+// ─────────────────────────────────────────────────────────────
+
 // Hàm chuyển đổi chuỗi ngày DD/MM/YYYY thành timestamp để so sánh
 function parseDate(str) {
   if (!str || typeof str !== 'string' || str === '—' || str.trim() === '') return 0;
@@ -1658,6 +1728,7 @@ function syncData() {
         if (r.every(c => !c)) continue;
 
         const obj = {};
+        obj._sheetRow = i + 1; // Số hàng thực tế trong Google Sheets (1-indexed)
         COL_DEFS.forEach((col, idx) => {
           obj[col.key] = r[idx] || '';
         });
@@ -1930,6 +2001,175 @@ function openDetail(idx) {
 function closeModal(e) {
   if (!e || e.target === document.getElementById('modalOverlay')) {
     document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+// ====== EDIT MODAL ======
+let _editRow = null; // row object đang chỉnh sửa
+
+// Các cột được phép sửa, nhóm theo tab
+const EDIT_GROUPS = [
+  { title: '📦 Thông tin cơ bản', fields: [
+    { key:'D', label:'Tên TSCĐ',       type:'text' },
+    { key:'E', label:'Hãng sản xuất',  type:'text' },
+    { key:'F', label:'Serial',         type:'text' },
+    { key:'G', label:'Ngày sử dụng',   type:'text', hint:'DD/MM/YYYY' },
+    { key:'H', label:'SL',             type:'text' },
+    { key:'I', label:'Hiện trạng',     type:'select',
+      options:['Hoạt động tốt','Hoạt động','Hỏng','Không tìm thấy','Chưa xác định'] },
+    { key:'J', label:'Người quản lý',  type:'text' },
+    { key:'K', label:'Vị trí',         type:'text' },
+    { key:'L', label:'Ghi chú',        type:'textarea' },
+  ]},
+  { title: '🌐 Thông tin mạng', fields: [
+    { key:'S', label:'IP Address',     type:'text' },
+    { key:'T', label:'Gateway',        type:'text' },
+    { key:'U', label:'Name CPU',       type:'text' },
+    { key:'Q', label:'Vlan',           type:'text' },
+    { key:'AB', label:'SW',            type:'text' },
+  ]},
+  { title: '💻 Thông số kỹ thuật', fields: [
+    { key:'M', label:'CPU',            type:'text' },
+    { key:'N', label:'RAM',            type:'text' },
+    { key:'O', label:'HDD',            type:'text' },
+  ]},
+  { title: '📅 Kiểm kê', fields: [
+    { key:'Z',  label:'Ngày Update',   type:'text', hint:'DD/MM/YYYY' },
+    { key:'AA', label:'Ghi chú (AA)',  type:'textarea' },
+    { key:'AC', label:'Ghi chú (AC)',  type:'textarea' },
+  ]},
+];
+
+function openEdit() {
+  // Lấy row hiện tại từ modal detail
+  const idEl = document.getElementById('modalId');
+  if (!idEl) return;
+  const maTaisan = idEl.textContent.trim();
+  _editRow = allData.find(r => (r.B || '').trim() === maTaisan) || null;
+  if (!_editRow) { showToast('Không tìm thấy dòng để sửa', 'error'); return; }
+
+  document.getElementById('editModalId').textContent = _editRow.B || '—';
+
+  // Cảnh báo nếu chưa cấu hình Apps Script
+  let warnHtml = '';
+  if (!APPS_SCRIPT_URL) {
+    warnHtml = `<div class="edit-setup-warn">
+      ⚠️ <strong>Chưa cấu hình Apps Script URL.</strong><br>
+      Điền <code>APPS_SCRIPT_URL</code> trong phần CONFIG của file để bật tính năng lưu.<br>
+      Xem file <code>Code.gs</code> để biết cách deploy.
+    </div>`;
+  }
+
+  // Render form
+  let html = warnHtml;
+  EDIT_GROUPS.forEach(grp => {
+    html += `<div class="edit-group"><div class="edit-group-title">${grp.title}</div>`;
+    grp.fields.forEach(f => {
+      const val = (_editRow[f.key] || '').replace(/"/g, '&quot;');
+      let input = '';
+      if (f.type === 'select') {
+        const opts = f.options.map(o => `<option${o===_editRow[f.key]?' selected':''}>${o}</option>`).join('');
+        input = `<select class="edit-select" data-key="${f.key}"><option value=""></option>${opts}</select>`;
+      } else if (f.type === 'textarea') {
+        input = `<textarea class="edit-textarea" data-key="${f.key}" rows="2">${_editRow[f.key]||''}</textarea>`;
+      } else {
+        const ph = f.hint ? ` placeholder="${f.hint}"` : '';
+        input = `<input class="edit-input" data-key="${f.key}" type="text" value="${val}"${ph}>`;
+      }
+      html += `<div class="edit-row">
+        <div class="edit-label">${f.label}</div>
+        <div>${input}</div>
+      </div>`;
+    });
+    // Readonly info
+    html += `<div class="edit-row">
+      <div class="edit-label" style="color:var(--text-muted)">Mã TS (ID)</div>
+      <div class="edit-readonly">${_editRow.B||'—'} &nbsp;·&nbsp; Hàng ${_editRow._sheetRow||'?'} trong Sheet</div>
+    </div>`;
+    html += `</div>`;
+  });
+
+  document.getElementById('editFormBody').innerHTML = html;
+  document.getElementById('saveStatus').textContent = '';
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function closeEdit(e) {
+  if (!e || e.target === document.getElementById('editOverlay')) {
+    document.getElementById('editOverlay').classList.remove('open');
+    _editRow = null;
+  }
+}
+
+async function saveEdit() {
+  if (!_editRow) return;
+
+  if (!APPS_SCRIPT_URL) {
+    showToast('⚠️ Chưa cấu hình APPS_SCRIPT_URL', 'error');
+    return;
+  }
+
+  // Thu thập giá trị thay đổi
+  const updates = {};
+  document.querySelectorAll('#editFormBody [data-key]').forEach(el => {
+    const key = el.getAttribute('data-key');
+    const newVal = el.value.trim();
+    if (newVal !== (_editRow[key] || '').trim()) {
+      updates[key] = newVal;
+    }
+  });
+
+  if (!Object.keys(updates).length) {
+    showToast('Không có thay đổi nào', 'info');
+    closeEdit();
+    return;
+  }
+
+  // UI loading
+  const saveBtn = document.getElementById('saveBtn');
+  const statusEl = document.getElementById('saveStatus');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '⏳ Đang lưu...';
+  statusEl.textContent = '';
+
+  try {
+    const payload = {
+      secret:   EDIT_SECRET,
+      sheetRow: _editRow._sheetRow,
+      updates:  updates,
+      editor:   'web-snoc2'
+    };
+
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+
+    const json = await res.json();
+
+    if (json.ok) {
+      // Cập nhật local data
+      Object.assign(_editRow, updates);
+      // Cập nhật allData luôn
+      const globalRow = allData.find(r => r._sheetRow === _editRow._sheetRow);
+      if (globalRow) Object.assign(globalRow, updates);
+
+      showToast(`✅ Đã lưu ${Object.keys(updates).length} trường vào Sheets`, 'success');
+      closeEdit();
+      // Re-render
+      if (currentView === 'table') renderTable();
+      else renderCards();
+    } else {
+      throw new Error(json.error || 'Lỗi không xác định');
+    }
+  } catch (err) {
+    statusEl.style.color = 'var(--danger)';
+    statusEl.textContent = '❌ ' + err.message;
+    showToast('❌ Lưu thất bại: ' + err.message, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 Lưu thay đổi';
   }
 }
 
