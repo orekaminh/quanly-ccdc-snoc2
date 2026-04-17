@@ -6,6 +6,7 @@
 <title>SNOC2 — Quản Lý CCDC & TSCĐ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zxing-js/0.21.3/zxing.min.js"></script>
 <style>
   :root {
     --bg-base: #0a0e14;
@@ -660,8 +661,150 @@ th.active-sort .sort-icon {
   }
   .footer-item { display: flex; align-items: center; gap: 6px; }
 
-  /* ====== SCROLLBAR ====== */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  /* ====== BARCODE SCANNER ====== */
+  .scan-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: transparent; border: 1px solid var(--accent2);
+    color: var(--accent); font-size: 13px;
+    width: 34px; height: 34px; border-radius: var(--radius);
+    cursor: pointer; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0;
+    position: relative;
+  }
+  .scan-btn:hover { background: rgba(0,212,255,0.12); box-shadow: var(--glow); }
+  .scan-btn.active { background: rgba(0,255,157,0.12); border-color: var(--accent3); color: var(--accent3); box-shadow: 0 0 12px rgba(0,255,157,0.3); }
+
+  /* Scanner Modal */
+  .scanner-overlay {
+    display: none; position: fixed; inset: 0; z-index: 400;
+    background: rgba(0,0,0,0.85); align-items: center; justify-content: center;
+  }
+  .scanner-overlay.open { display: flex; }
+  
+  .scanner-modal {
+    background: var(--bg-panel); border: 1px solid var(--border-light);
+    border-radius: 12px; width: 460px; max-width: 95vw;
+    box-shadow: var(--shadow), 0 0 40px rgba(0,212,255,0.15);
+    animation: modalIn 0.2s ease; overflow: hidden;
+  }
+  
+  .scanner-header {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, rgba(0,144,204,0.1), rgba(0,212,255,0.05));
+  }
+  .scanner-title {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+  }
+  .scanner-close {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 20px; line-height: 1; padding: 2px;
+    transition: color 0.15s;
+  }
+  .scanner-close:hover { color: var(--danger); }
+  
+  .scanner-body { padding: 16px; }
+  
+  .scanner-viewport {
+    position: relative; width: 100%; aspect-ratio: 4/3;
+    background: #000; border-radius: 8px; overflow: hidden;
+    border: 2px solid var(--border);
+  }
+  .scanner-viewport.scanning { border-color: var(--accent); box-shadow: 0 0 20px rgba(0,212,255,0.25); }
+  
+  #scannerVideo {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  
+  /* Laser line animation */
+  .scanner-laser {
+    position: absolute; left: 8%; right: 8%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--accent3), var(--accent), transparent);
+    border-radius: 2px; opacity: 0;
+    box-shadow: 0 0 8px var(--accent), 0 0 20px rgba(0,212,255,0.4);
+    top: 50%;
+    animation: none;
+  }
+  .scanner-viewport.scanning .scanner-laser {
+    opacity: 1;
+    animation: laser-scan 2s ease-in-out infinite;
+  }
+  @keyframes laser-scan {
+    0%   { top: 15%; opacity: 0.9; }
+    50%  { top: 85%; opacity: 1; }
+    100% { top: 15%; opacity: 0.9; }
+  }
+  
+  /* Corner brackets */
+  .scanner-corners { position: absolute; inset: 0; pointer-events: none; }
+  .scanner-corners::before, .scanner-corners::after,
+  .scanner-corner-br::before, .scanner-corner-br::after {
+    content: ''; position: absolute;
+    width: 22px; height: 22px;
+    border-color: var(--accent); border-style: solid;
+    opacity: 0.8;
+  }
+  .scanner-corners::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+  .scanner-corners::after  { top: 10px; right: 10px; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
+  .scanner-corner-br::before { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
+  .scanner-corner-br::after  { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+  .scanner-status {
+    margin-top: 12px; padding: 8px 12px; border-radius: 6px;
+    font-family: var(--font-mono); font-size: 11px; text-align: center;
+    background: var(--bg-card); border: 1px solid var(--border);
+    color: var(--text-muted); min-height: 36px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .scanner-status.detecting { color: var(--accent); border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.05); }
+  .scanner-status.found { color: var(--success); border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.07); }
+  .scanner-status.error { color: var(--danger); border-color: rgba(255,68,68,0.3); background: rgba(255,68,68,0.07); }
+
+  .scanner-result-box {
+    display: none; margin-top: 10px; padding: 10px 14px;
+    background: rgba(0,255,157,0.07); border: 1px solid rgba(0,255,157,0.25);
+    border-radius: 6px;
+  }
+  .scanner-result-box.show { display: block; }
+  .scanner-result-label { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); letter-spacing: 0.5px; margin-bottom: 4px; }
+  .scanner-result-value { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--success); word-break: break-all; }
+  
+  .scanner-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .scanner-action-btn {
+    flex: 1; padding: 8px; border-radius: 6px; cursor: pointer;
+    font-size: 12px; font-weight: 500; font-family: var(--font-main);
+    border: 1px solid var(--border); background: var(--bg-card);
+    color: var(--text-secondary); transition: all 0.15s; text-align: center;
+  }
+  .scanner-action-btn:hover { border-color: var(--accent2); color: var(--accent); }
+  .scanner-action-btn.primary {
+    background: rgba(0,144,204,0.15); border-color: var(--accent2); color: var(--accent); font-weight: 600;
+  }
+  .scanner-action-btn.primary:hover { background: rgba(0,144,204,0.28); }
+
+  .scanner-tip {
+    margin-top: 10px; font-size: 10px; color: var(--text-muted);
+    text-align: center; font-family: var(--font-mono);
+    line-height: 1.6;
+  }
+
+  /* Highlight found row */
+  tr.barcode-highlight td {
+    animation: highlight-pulse 1.5s ease;
+  }
+  @keyframes highlight-pulse {
+    0%   { background: rgba(0,255,157,0.3) !important; }
+    100% { background: transparent; }
+  }
+
+  /* Số lượng kết quả tìm thấy từ scan */
+  .scan-match-badge {
+    display: inline-block; background: var(--accent3); color: #000;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 10px; margin-left: 6px;
+  }
+
   ::-webkit-scrollbar-track { background: var(--bg-base); }
   ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
@@ -1007,6 +1150,14 @@ th.active-sort .sort-icon {
         <input type="text" class="search-input" id="searchInput"
           placeholder="Tìm kiếm ID, tên, serial, người quản lý..." oninput="applyFilters()">
       </div>
+      <button class="scan-btn" id="scanBtn" onclick="openScanner()" title="Quét Barcode / QR bằng camera">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/>
+          <path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/>
+          <line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="17" y2="12"/>
+          <line x1="12" y1="7" x2="12" y2="17"/>
+        </svg>
+      </button>
       
       <select class="filter-select" id="personFilter" onchange="applyFilters()">
         <option value="">— Người quản lý —</option>
@@ -1096,6 +1247,280 @@ th.active-sort .sort-icon {
     <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
+
+<!-- ====== BARCODE SCANNER MODAL ====== -->
+<div class="scanner-overlay" id="scannerOverlay" onclick="closeScannerOnBg(event)">
+  <div class="scanner-modal" onclick="event.stopPropagation()">
+    <div class="scanner-header">
+      <div class="scanner-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+          <path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/>
+          <path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/>
+          <line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="17" y2="12"/>
+          <line x1="12" y1="7" x2="12" y2="17"/>
+        </svg>
+        Quét Barcode / QR Code
+      </div>
+      <button class="scanner-close" onclick="closeScanner()">✕</button>
+    </div>
+    <div class="scanner-body">
+      <div class="scanner-viewport" id="scannerViewport">
+        <video id="scannerVideo" autoplay muted playsinline></video>
+        <div class="scanner-laser"></div>
+        <div class="scanner-corners">
+          <div class="scanner-corner-br"></div>
+        </div>
+      </div>
+      
+      <div class="scanner-status" id="scannerStatus">
+        <span>📷</span> Đang khởi động camera...
+      </div>
+
+      <div class="scanner-result-box" id="scannerResultBox">
+        <div class="scanner-result-label">📦 MÃ ĐÃ QUÉT:</div>
+        <div class="scanner-result-value" id="scannerResultValue"></div>
+      </div>
+
+      <div class="scanner-actions">
+        <div class="scanner-action-btn" id="scanAgainBtn" onclick="restartScan()" style="display:none">🔄 Quét lại</div>
+        <div class="scanner-action-btn primary" id="scanApplyBtn" onclick="applyScannedCode()" style="display:none">🔍 Tìm kiếm ngay</div>
+        <div class="scanner-action-btn" onclick="closeScanner()">✕ Đóng</div>
+      </div>
+
+      <div class="scanner-tip">
+        Hỗ trợ: Code 128 · Code 39 · EAN-13 · QR Code · DataMatrix<br>
+        Hướng camera vào barcode / serial trên thiết bị
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== BARCODE SCANNER MODULE ======
+let scannerActive = false;
+let codeReader = null;
+let scannerStream = null;
+let lastScannedCode = null;
+let scannerInitialized = false;
+
+function openScanner() {
+  document.getElementById('scannerOverlay').classList.add('open');
+  document.getElementById('scanBtn').classList.add('active');
+  resetScannerUI();
+  startScanner();
+}
+
+function closeScannerOnBg(e) {
+  if (e.target === document.getElementById('scannerOverlay')) closeScanner();
+}
+
+function closeScanner() {
+  stopScanner();
+  document.getElementById('scannerOverlay').classList.remove('open');
+  document.getElementById('scanBtn').classList.remove('active');
+}
+
+function resetScannerUI() {
+  const viewport = document.getElementById('scannerViewport');
+  viewport.classList.remove('scanning');
+  document.getElementById('scannerStatus').className = 'scanner-status';
+  document.getElementById('scannerStatus').innerHTML = '<span>📷</span> Đang khởi động camera...';
+  document.getElementById('scannerResultBox').classList.remove('show');
+  document.getElementById('scanAgainBtn').style.display = 'none';
+  document.getElementById('scanApplyBtn').style.display = 'none';
+  lastScannedCode = null;
+}
+
+async function startScanner() {
+  stopScanner();
+  scannerActive = true;
+
+  const video = document.getElementById('scannerVideo');
+  const statusEl = document.getElementById('scannerStatus');
+  const viewport = document.getElementById('scannerViewport');
+
+  try {
+    // Ưu tiên camera sau (môi trường) trên mobile
+    const constraints = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 960 }
+      }
+    };
+
+    scannerStream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = scannerStream;
+    await video.play();
+
+    viewport.classList.add('scanning');
+    statusEl.className = 'scanner-status detecting';
+    statusEl.innerHTML = '<span style="animation:spin 1s linear infinite;display:inline-block">⟳</span>&nbsp; Đang tìm mã Barcode...';
+
+    // Dùng ZXing nếu có, fallback sang canvas decode thủ công
+    if (typeof ZXing !== 'undefined') {
+      await startZXingDecode(video);
+    } else {
+      startCanvasDecode(video);
+    }
+
+  } catch (err) {
+    viewport.classList.remove('scanning');
+    let msg = '❌ Không thể truy cập camera.';
+    if (err.name === 'NotAllowedError') msg = '🔒 Cần cấp quyền truy cập camera. Kiểm tra cài đặt trình duyệt.';
+    else if (err.name === 'NotFoundError') msg = '📵 Không tìm thấy camera trên thiết bị này.';
+    statusEl.className = 'scanner-status error';
+    statusEl.textContent = msg;
+    showToast(msg, 'error');
+  }
+}
+
+async function startZXingDecode(video) {
+  try {
+    const hints = new Map();
+    const formats = [
+      ZXing.BarcodeFormat.CODE_128,
+      ZXing.BarcodeFormat.CODE_39,
+      ZXing.BarcodeFormat.EAN_13,
+      ZXing.BarcodeFormat.EAN_8,
+      ZXing.BarcodeFormat.QR_CODE,
+      ZXing.BarcodeFormat.DATA_MATRIX,
+      ZXing.BarcodeFormat.ITF,
+      ZXing.BarcodeFormat.UPC_A,
+      ZXing.BarcodeFormat.UPC_E,
+    ];
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+    codeReader = new ZXing.BrowserMultiFormatReader(hints, 500);
+    codeReader.decodeFromVideoElement(video, (result, err) => {
+      if (!scannerActive) return;
+      if (result) {
+        onBarcodeFound(result.getText(), result.getBarcodeFormat ? result.getBarcodeFormat().toString() : 'BARCODE');
+      }
+    });
+  } catch(e) {
+    // Fallback nếu ZXing API khác version
+    startCanvasDecode(video);
+  }
+}
+
+function startCanvasDecode(video) {
+  // Fallback dùng BarcodeDetector API của browser (Chrome 83+, Android Chrome)
+  if (!('BarcodeDetector' in window)) {
+    const statusEl = document.getElementById('scannerStatus');
+    statusEl.className = 'scanner-status error';
+    statusEl.innerHTML = '⚠️ Trình duyệt chưa hỗ trợ quét barcode tự động.<br><small>Hãy thử Chrome trên Android/Desktop.</small>';
+    return;
+  }
+
+  const detector = new BarcodeDetector({
+    formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'data_matrix', 'itf', 'upc_a', 'upc_e']
+  });
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  function tick() {
+    if (!scannerActive || !video.videoWidth) {
+      if (scannerActive) requestAnimationFrame(tick);
+      return;
+    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    detector.detect(canvas).then(codes => {
+      if (!scannerActive) return;
+      if (codes.length > 0) {
+        onBarcodeFound(codes[0].rawValue, codes[0].format);
+      } else {
+        requestAnimationFrame(tick);
+      }
+    }).catch(() => { if (scannerActive) requestAnimationFrame(tick); });
+  }
+  requestAnimationFrame(tick);
+}
+
+function onBarcodeFound(code, format) {
+  if (!scannerActive) return;
+  scannerActive = false; // Dừng quét sau khi tìm thấy
+
+  // Dừng ZXing reader nếu đang dùng
+  if (codeReader && codeReader.stopAsyncDecode) codeReader.stopAsyncDecode();
+
+  lastScannedCode = code;
+  const viewport = document.getElementById('scannerViewport');
+  const statusEl = document.getElementById('scannerStatus');
+
+  viewport.classList.remove('scanning');
+  statusEl.className = 'scanner-status found';
+  statusEl.innerHTML = `✅ Đã quét thành công!&nbsp;<span style="opacity:0.6;font-size:10px">[${format || 'BARCODE'}]</span>`;
+
+  const resultBox = document.getElementById('scannerResultBox');
+  document.getElementById('scannerResultValue').textContent = code;
+  resultBox.classList.add('show');
+
+  document.getElementById('scanAgainBtn').style.display = '';
+  document.getElementById('scanApplyBtn').style.display = '';
+
+  // Beep / vibrate feedback
+  try { navigator.vibrate && navigator.vibrate(80); } catch(e){}
+
+  // Tự động đếm kết quả tìm thấy
+  const matches = allData.filter(r => Object.values(r).some(v => v && String(v).toLowerCase().includes(code.toLowerCase())));
+  if (matches.length > 0) {
+    statusEl.innerHTML += `&nbsp;<span class="scan-match-badge">${matches.length} kết quả</span>`;
+  } else {
+    statusEl.innerHTML += `&nbsp;<span style="color:var(--warn);font-size:10px">⚠ Không tìm thấy trong dữ liệu</span>`;
+  }
+}
+
+function applyScannedCode() {
+  if (!lastScannedCode) return;
+  document.getElementById('searchInput').value = lastScannedCode;
+  applyFilters();
+  closeScanner();
+  showToast(`🔍 Đã tìm kiếm: "${lastScannedCode}"`, 'success');
+
+  // Highlight dòng đầu tiên tìm thấy
+  setTimeout(() => {
+    const firstRow = document.querySelector('#tableBody tr');
+    if (firstRow) {
+      firstRow.classList.add('barcode-highlight');
+      firstRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => firstRow.classList.remove('barcode-highlight'), 1600);
+    }
+  }, 200);
+}
+
+function restartScan() {
+  resetScannerUI();
+  startScanner();
+}
+
+function stopScanner() {
+  scannerActive = false;
+  if (codeReader) {
+    try { codeReader.reset(); } catch(e) {}
+    try { codeReader.stopAsyncDecode(); } catch(e) {}
+    codeReader = null;
+  }
+  if (scannerStream) {
+    scannerStream.getTracks().forEach(t => t.stop());
+    scannerStream = null;
+  }
+  const video = document.getElementById('scannerVideo');
+  video.srcObject = null;
+  document.getElementById('scannerViewport').classList.remove('scanning');
+}
+
+// Đóng scanner khi nhấn Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('scannerOverlay').classList.contains('open')) {
+    closeScanner();
+  }
+});
+</script>
 
 <div class="toast-container" id="toastContainer"></div>
 
