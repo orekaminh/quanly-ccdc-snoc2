@@ -362,11 +362,36 @@
   @media (max-width:768px) {
     .header { padding:0 12px; height:52px; gap:8px; }
 	.dept-selector-overlay {
-        align-items: flex-start;  /* không căn giữa nữa, cho phép cuộn */
+        align-items: flex-start;
+        overflow-x: hidden;   /* chặn scroll ngang */
+        overflow-y: auto;
     }
     .dept-selector-wrap {
         padding: 20px 16px;
+        width: 100%;
+        box-sizing: border-box;  /* padding không làm tràn */
     }
+    .dept-grid {
+        grid-template-columns: 1fr 1fr;  /* cố định 2 cột đều nhau */
+        gap: 10px;
+    }
+    .dept-card {
+        padding: 16px 12px 14px;
+    }
+    .dept-card-badge {
+        font-size: 16px;
+    }
+    .dept-selector-title {
+        font-size: 18px;
+    }
+}
+
+/* Màn hình rất nhỏ < 380px → 1 cột */
+@media (max-width: 380px) {
+    .dept-grid {
+        grid-template-columns: 1fr;
+    }
+}
     .mobile-menu-btn { display:flex; }
     .header-sub,.header-divider,.last-sync,.sync-dot { display:none; }
     .header .toolbar-btn, .header .sync-btn { display:none; }
