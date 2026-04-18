@@ -75,6 +75,7 @@
   [data-theme="light"] .toolbar-btn.success-btn { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.4); color: #059669; }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { overflow-x: hidden; }
   body {
     background: var(--bg-base); color: var(--text-primary);
     font-family: var(--font-main); font-size: 13px; line-height: 1.5;
@@ -403,14 +404,6 @@
     .dept-selector-title {
         font-size: 18px;
     }
-}
-
-/* Màn hình rất nhỏ < 380px → 1 cột */
-@media (max-width: 380px) {
-    .dept-grid {
-        grid-template-columns: 1fr;
-    }
-}
     .mobile-menu-btn { display:flex; }
     .header-sub,.header-divider,.last-sync,.sync-dot { display:none; }
     .header .toolbar-btn, .header .sync-btn { display:none; }
@@ -433,6 +426,8 @@
     .view-tab { padding:8px 12px; font-size:12px; }
     .record-count { order:99; width:100%; margin-left:0; text-align:right; padding:2px 0; }
     .table-wrap { -webkit-overflow-scrolling:touch; }
+    .layout { overflow-x: hidden; }
+    .sidebar:not(.open) { border-right: none; }
     .data-table { font-size:11px; }
     .data-table td,.th-inner { padding:8px 8px; }
     .data-table td { min-height:40px; }
@@ -456,6 +451,9 @@
     .filter-chip-close { padding:4px; }
     .sidebar-close-btn { display:flex !important; align-items:center; gap:8px; padding:14px 16px 6px; color:var(--text-muted); font-size:12px; cursor:pointer; border-bottom:1px solid var(--border); margin-bottom:4px; }
     .sidebar-close-btn:hover { color:var(--text-primary); }
+  }
+  @media (max-width:380px) {
+    .dept-grid { grid-template-columns:1fr; }
   }
   @media (min-width:480px) and (max-width:768px) { .cards-grid { grid-template-columns:repeat(2,1fr); } }
 
@@ -636,6 +634,11 @@
     cursor: pointer; transition: all 0.2s; white-space: nowrap;
   }
   .switch-dept-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.07); }
+
+  @media (max-width:768px) {
+    .switch-dept-label { display: none; }
+    .switch-dept-btn { width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -655,7 +658,7 @@
     <div class="last-sync" id="lastSyncText">Chưa đồng bộ</div>
   </div>
   <div class="header-spacer"></div>
-  <button class="switch-dept-btn" onclick="openDeptSelector()" title="Đổi phòng ban">⇄ Đổi phòng</button>
+  <button class="switch-dept-btn" onclick="openDeptSelector()" title="Đổi phòng ban">⇄ <span class="switch-dept-label">Đổi phòng</span></button>
   <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Chuyển Dark/Light mode">🌙</button>
   <button class="toolbar-btn" onclick="exportCSV()">⬇ Xuất CSV</button>
   <button class="sync-btn" id="syncBtn" onclick="syncData()">
