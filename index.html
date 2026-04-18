@@ -270,7 +270,7 @@
   .scan-btn.active { background: rgba(0,255,157,0.12); border-color: var(--accent3); color: var(--accent3); }
 
   /* ====== BARCODE SCANNER ====== */
-  .scanner-overlay { display: none; position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
+  .scanner-overlay { display: none; position: fixed; inset: 0; z-index: 1200; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
   .scanner-overlay.open { display: flex; }
   .scanner-modal { background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: 12px; width: 460px; max-width: 95vw; box-shadow: var(--shadow), 0 0 40px rgba(0,212,255,0.15); animation: modalIn 0.2s ease; overflow: hidden; }
   .scanner-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg,rgba(0,144,204,0.1),rgba(0,212,255,0.05)); }
@@ -936,6 +936,9 @@ function onBarcodeFound(code, format) {
   document.getElementById('scannerResultBox').classList.add('show');
   document.getElementById('scanAgainBtn').style.display = '';
   document.getElementById('scanApplyBtn').style.display = '';
+  // Đổi label nút theo mode
+  const applyBtn = document.getElementById('scanApplyBtn');
+  if (applyBtn) applyBtn.textContent = _scannerMode === 'serial' ? '✅ Điền vào form' : '🔍 Tìm kiếm ngay';
   try { navigator.vibrate && navigator.vibrate(80); } catch(e){}
   const matches = allData.filter(r => Object.values(r).some(v => v && String(v).toLowerCase().includes(code.toLowerCase())));
   if (matches.length > 0) statusEl.innerHTML += `&nbsp;<span class="scan-match-badge">${matches.length} kết quả</span>`;
@@ -956,9 +959,6 @@ function applyScannedCode() {
 // ====== SERIAL SCAN MODE ======
 function openScannerForSerial() {
   _scannerMode = 'serial';
-  // Đổi label nút Apply
-  const applyBtn = document.getElementById('scanApplyBtn');
-  if (applyBtn) applyBtn.textContent = '✅ Điền vào form';
   document.getElementById('scannerOverlay').classList.add('open');
   resetScannerUI();
   startScanner();
@@ -984,9 +984,7 @@ function parseDeviceInfo(code) {
 
   // ── thử key:value hoặc key=value, phân cách bằng ; | newline ──
   const kv = {};
-  const kvRe = /([A-Za-zÀ-ỹ_\/]+)\s*[=:]\s*([^;|
-
-]+)/g;
+  const kvRe = /([A-Za-zÀ-ỹ_\/]+)\s*[=:]\s*([^;|\n]+)/g;
   let m;
   while ((m = kvRe.exec(code)) !== null) kv[m[1].toLowerCase().trim().replace(/\s+/g,'_')] = m[2].trim();
   if (Object.keys(kv).length >= 1) {
@@ -1335,7 +1333,7 @@ function renderTable() {
 
   head.innerHTML = `<tr>
    ${visible.map(c => `<th class="${sortCol===c.key?'active-sort':''}">
-      <div class="th-inner" onclick="sortBy('${c.key}')">${c.label}
+      <div class="th-inner" onclick="sortBy('${c.key}')">${getColLabel(c, COL_DEFS.findIndex(d=>d.key===c.key))}
         <span class="sort-icon">${sortCol===c.key?(sortDir===1?' ▴':' ▾'):' ↕'}</span>
       </div></th>`).join('')}
    <th class="th-action"></th></tr>`;
@@ -1969,7 +1967,7 @@ function buildColList() {
       const checked = visibleCols.has(c.key);
       html += `<div class="col-item ${checked?'checked':''}" id="colItem_${c.key}">
         <input type="checkbox" id="col_${c.key}" ${checked?'checked':''} onchange="toggleCol('${c.key}',this.checked)">
-        <label for="col_${c.key}">${c.label}</label>
+        <label for="col_${c.key}">${getColLabel(c, COL_DEFS.findIndex(d=>d.key===c.key))}</label>
         <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">${c.key}</span>
       </div>`;
     });
@@ -2106,7 +2104,7 @@ function setView(v) {
 function exportCSV() {
   if (!filteredData.length) { showToast('Không có dữ liệu để xuất', 'info'); return; }
   const visible = COL_DEFS.filter(c => visibleCols.has(c.key));
-  const header = visible.map(c => `"${c.label}"`).join(',');
+  const header = visible.map(c => `"${getColLabel(c, COL_DEFS.findIndex(d=>d.key===c.key))}"`).join(',');
   const rows = filteredData.map(row => visible.map(c => `"${(row[c.key]||'').replace(/"/g,'""')}"`).join(','));
   const csv = [header,...rows].join('\n');
   const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' });
