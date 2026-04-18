@@ -2407,13 +2407,21 @@ async function saveEdit() {
   document.querySelectorAll('#editFormBody [data-key]').forEach(el => {
     const key = el.getAttribute('data-key');
     let newVal = el.value.replace(/\r/g,'').trim();
-    // Convert date: YYYY-MM-DD → DD/MM/YYYY
-    if (el.getAttribute('data-edittype') === 'date' && newVal) {
-      const p = newVal.split('-');
-      if (p.length === 3) newVal = `${p[2]}/${p[1]}/${p[0]}`;
-    }
     const oldVal = String(_editRow[key]||'').replace(/\r/g,'').trim();
     if (el.tagName === 'SELECT' && newVal === '') return;
+    if (el.getAttribute('data-edittype') === 'date') {
+      // Nếu input rỗng (date không parse được) → bỏ qua, không ghi đè dữ liệu cũ
+      if (!newVal) return;
+      // So sánh chuẩn hoá: convert oldVal sang YYYY-MM-DD rồi so với input value
+      // Tránh false-positive do zero-padding khác nhau (15/3/2020 vs 15/03/2020)
+      const oldNormalized = toInputDate(oldVal);
+      if (newVal === oldNormalized) return; // không đổi → bỏ qua
+      // Có thay đổi thật → convert YYYY-MM-DD → DD/MM/YYYY để lưu lên sheet
+      const p = newVal.split('-');
+      if (p.length === 3) newVal = `${p[2]}/${p[1]}/${p[0]}`;
+      updates[key] = newVal;
+      return;
+    }
     if (newVal !== oldVal) updates[key] = newVal;
   });
   // Xử lý ô nhập tự do của dynamic select (ghi đè nếu người dùng nhập tay)
@@ -2652,47 +2660,6 @@ function printQR() {
     </div>
     <script>window.onload=()=>{window.print();}<\/script>
   
-<!-- Audit Log Overlay -->
-<div class="audit-overlay" id="auditOverlay" onclick="closeAuditOutside(event)">
-  <div class="audit-modal" id="auditModal">
-    <div class="audit-header">
-      <span style="font-size:20px">🕓</span>
-      <div>
-        <div class="audit-title">Lịch sử chỉnh sửa</div>
-        <div class="audit-subtitle">Audit Log — ghi nhận từ Google Sheets</div>
-      </div>
-      <button class="audit-close" onclick="closeAuditLog()">✕</button>
-    </div>
-    <div class="audit-toolbar">
-      <input class="audit-search" id="auditSearch" placeholder="Tìm Mã tài sản, người chỉnh sửa..." oninput="renderAuditTable()">
-      <select class="audit-filter" id="auditTypeFilter" onchange="renderAuditTable()">
-        <option value="">Tất cả thao tác</option>
-        <option value="edit">✏️ Chỉnh sửa</option>
-        <option value="add">➕ Thêm mới</option>
-        <option value="import">📥 Import</option>
-      </select>
-      <button class="audit-refresh" onclick="loadAuditLog()">⟳ Tải lại</button>
-      <span class="audit-count" id="auditCount"></span>
-    </div>
-    <div class="audit-body">
-      <div class="audit-loading" id="auditLoading">⏳ Đang tải lịch sử...</div>
-      <table class="audit-table" id="auditTable" style="display:none">
-        <thead>
-          <tr>
-            <th>Thời gian</th>
-            <th>Thao tác</th>
-            <th>Mã tài sản</th>
-            <th>Nội dung thay đổi</th>
-            <th>Người thực hiện</th>
-          </tr>
-        </thead>
-        <tbody id="auditTbody"></tbody>
-      </table>
-      <div class="audit-empty" id="auditEmpty" style="display:none">Không có bản ghi nào phù hợp</div>
-    </div>
-  </div>
-</div>
-
 </body></html>`);
   win.document.close();
 }
@@ -3631,5 +3598,46 @@ window.addEventListener('load', () => {
   updateKKProgressBadge();
 });
 </script>
+<!-- Audit Log Overlay -->
+<div class="audit-overlay" id="auditOverlay" onclick="closeAuditOutside(event)">
+  <div class="audit-modal" id="auditModal">
+    <div class="audit-header">
+      <span style="font-size:20px">🕓</span>
+      <div>
+        <div class="audit-title">Lịch sử chỉnh sửa</div>
+        <div class="audit-subtitle">Audit Log — ghi nhận từ Google Sheets</div>
+      </div>
+      <button class="audit-close" onclick="closeAuditLog()">✕</button>
+    </div>
+    <div class="audit-toolbar">
+      <input class="audit-search" id="auditSearch" placeholder="Tìm Mã tài sản, người chỉnh sửa..." oninput="renderAuditTable()">
+      <select class="audit-filter" id="auditTypeFilter" onchange="renderAuditTable()">
+        <option value="">Tất cả thao tác</option>
+        <option value="edit">✏️ Chỉnh sửa</option>
+        <option value="add">➕ Thêm mới</option>
+        <option value="import">📥 Import</option>
+      </select>
+      <button class="audit-refresh" onclick="loadAuditLog()">⟳ Tải lại</button>
+      <span class="audit-count" id="auditCount"></span>
+    </div>
+    <div class="audit-body">
+      <div class="audit-loading" id="auditLoading">⏳ Đang tải lịch sử...</div>
+      <table class="audit-table" id="auditTable" style="display:none">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Thao tác</th>
+            <th>Mã tài sản</th>
+            <th>Nội dung thay đổi</th>
+            <th>Người thực hiện</th>
+          </tr>
+        </thead>
+        <tbody id="auditTbody"></tbody>
+      </table>
+      <div class="audit-empty" id="auditEmpty" style="display:none">Không có bản ghi nào phù hợp</div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
