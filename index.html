@@ -1337,13 +1337,22 @@ let _aggregateMode = false;
 
 // ====== DEPT INIT ======
 function initDept() {
-  // Luôn hiện màn chọn phòng khi mở app
-  openDeptSelector();
+  const p = new URLSearchParams(location.search);
+  const deptFromURL = p.get('dept');
+  if (deptFromURL && DEPT_CONFIG[deptFromURL]) {
+    loadDept(deptFromURL, false); // false = from URL, restore filters after load
+  } else {
+    openDeptSelector();
+  }
 }
 
-function loadDept(deptKey, showSelector) {
+function loadDept(deptKey, fromUserClick) {
   const cfg = DEPT_CONFIG[deptKey];
   if (!cfg) { openDeptSelector(); return; }
+
+  // fromUserClick=true → user chọn thủ công → không restore filter từ URL cũ
+  // fromUserClick=false → load từ URL params → sẽ restore filter sau khi data xong
+  _urlRestored = !!fromUserClick;
 
   _activeDept     = deptKey;
   _aggregateMode  = cfg.type === 'aggregate';
@@ -1352,7 +1361,8 @@ function loadDept(deptKey, showSelector) {
   APPS_SCRIPT_URL = cfg.scriptUrl || '';
   EDIT_SECRET     = cfg.secret    || '';
 
-  // (không lưu localStorage/URL để luôn hiện màn chọn phòng khi mở lại)
+  // Lưu dept vào URL để F5/share link giữ nguyên trạng thái
+  pushURLState();
 
   // Cập nhật accent color theo phòng
   document.documentElement.style.setProperty('--accent',  cfg.color);
@@ -1447,6 +1457,8 @@ function syncAggregate() {
 
     applyFilters(); updateStats(); buildTypeFilters();
     buildPersonFilter(); buildBrandFilter(); buildYearFilter(); buildYearStats();
+    // Khôi phục filter từ URL (chỉ lần đầu load)
+    if (!_urlRestored) { restoreFiltersFromURL(); _urlRestored = true; applyFiltersWithType(); }
 
     const now = new Date().toLocaleTimeString('vi-VN');
     document.getElementById('lastSyncText').textContent = `Đồng bộ: ${now} (${successCount}/${deptKeys.length} phòng)`;
@@ -1684,8 +1696,11 @@ function syncData(silent = false) {
       else Object.assign(row, pending);
     });
     // FIX: khôi phục giá trị filter trước khi rebuild dropdowns
-    applyFilters(); updateStats(); buildTypeFilters();
+    updateStats(); buildTypeFilters();
     buildPersonFilter(); buildBrandFilter(); buildYearFilter(); buildYearStats();
+    // Khôi phục filter từ URL (chỉ lần đầu load)
+    if (!_urlRestored) { restoreFiltersFromURL(); _urlRestored = true; }
+    applyFiltersWithType();
     document.getElementById('lastSyncText').textContent = 'Đồng bộ: ' + new Date().toLocaleTimeString('vi-VN');
     document.getElementById('footerDataInfo').textContent = `${allData.length} bản ghi · ${new Date().toLocaleDateString('vi-VN')}`;
     if (!silent) showToast('✅ Đồng bộ thành công — ' + allData.length + ' bản ghi', 'success');
@@ -1779,6 +1794,60 @@ function syncViaGviz(silent, onDataReady, onError) {
   document.body.appendChild(script);
 }
 
+// ====== URL STATE / DEEPLINK ======
+let _urlRestored = false;
+
+function pushURLState() {
+  if (!_activeDept) return;
+  const p = new URLSearchParams();
+  p.set('dept', _activeDept);
+  if (quickFilter && quickFilter !== 'all') p.set('qf', quickFilter);
+  if (_typeFilter) p.set('type', _typeFilter);
+  const q = document.getElementById('searchInput')?.value || '';
+  if (q) p.set('q', q);
+  const pf = document.getElementById('personFilter')?.value || '';
+  if (pf) p.set('person', pf);
+  const bf = document.getElementById('brandFilter')?.value || '';
+  if (bf) p.set('brand', bf);
+  const yf = document.getElementById('yearFilter')?.value || '';
+  if (yf) p.set('year', yf);
+  if (currentView && currentView !== 'table') p.set('view', currentView);
+  if (sortCol) { p.set('sort', sortCol); if (sortDir === -1) p.set('dir', '-1'); }
+  history.replaceState(null, '', location.pathname + '?' + p.toString());
+}
+
+function restoreFiltersFromURL() {
+  const p = new URLSearchParams(location.search);
+  const q      = p.get('q');
+  const person = p.get('person');
+  const brand  = p.get('brand');
+  const year   = p.get('year');
+  const qf     = p.get('qf') || 'all';
+  const type   = p.get('type');
+  const view   = p.get('view');
+  const sort   = p.get('sort');
+  const dir    = p.get('dir');
+
+  if (q)      { const el = document.getElementById('searchInput');  if (el) el.value = q; }
+  if (person) { const el = document.getElementById('personFilter'); if (el) el.value = person; }
+  if (brand)  { const el = document.getElementById('brandFilter');  if (el) el.value = brand; }
+  if (year)   { const el = document.getElementById('yearFilter');   if (el) el.value = year; }
+
+  quickFilter = qf;
+  document.querySelectorAll('[data-filter]').forEach(e => e.classList.remove('active'));
+  const qfEl = document.querySelector(`[data-filter="${qf}"]`) || document.querySelector('[data-filter="all"]');
+  if (qfEl) qfEl.classList.add('active');
+
+  if (type) {
+    _typeFilter = type;
+    document.querySelectorAll('[data-type]').forEach(e => {
+      if (e.getAttribute('data-type') === type) e.classList.add('active');
+    });
+  }
+  if (sort) { sortCol = sort; sortDir = dir === '-1' ? -1 : 1; }
+  if (view && view !== 'table') setView(view);
+}
+
 // ====== FILTERS ======
 function applyFilters() {
   const q = document.getElementById('searchInput').value.toLowerCase();
@@ -1819,6 +1888,7 @@ function applyFilters() {
   updateFilterChips();
   buildYearStats();
   if (currentView === 'table') renderTable(); else renderCards();
+  pushURLState();
 }
 
 function setFilter(filter, el) {
@@ -2623,6 +2693,7 @@ function applyFiltersWithType() {
   document.getElementById('recordCount').innerHTML = `<span>${filteredData.length}</span> / ${allData.length} bản ghi`;
   updateFilterChips();
   if (currentView==='table') renderTable(); else renderCards();
+  pushURLState();
 }
 
 function buildYearFilter() {
@@ -2698,6 +2769,7 @@ function setView(v) {
   document.getElementById('tabTable').classList.toggle('active', v==='table');
   document.getElementById('tabCards').classList.toggle('active', v==='cards');
   if (v==='table') renderTable(); else renderCards();
+  pushURLState();
 }
 
 // ====== EXPORT CSV ======
