@@ -361,6 +361,12 @@
 
   @media (max-width:768px) {
     .header { padding:0 12px; height:52px; gap:8px; }
+	.dept-selector-overlay {
+        align-items: flex-start;  /* không căn giữa nữa, cho phép cuộn */
+    }
+    .dept-selector-wrap {
+        padding: 20px 16px;
+    }
     .mobile-menu-btn { display:flex; }
     .header-sub,.header-divider,.last-sync,.sync-dot { display:none; }
     .header .toolbar-btn, .header .sync-btn { display:none; }
@@ -493,7 +499,8 @@
     display: none; position: fixed; inset: 0; z-index: 2000;
     background: #0a0e14;
     align-items: center; justify-content: center; flex-direction: column;
-  }
+    overflow-y: auto;  /* thêm dòng này */
+	}
   .dept-selector-overlay::before {
     content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1;
     background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);
