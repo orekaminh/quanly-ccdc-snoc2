@@ -171,8 +171,10 @@
   .stat-label { font-size: 11px; color: #94a3b8; margin-top: 4px; font-weight: 500; letter-spacing: 0.3px; opacity: 0.85; }
 
   .status-bar { margin-top: 8px; }
-  .status-item { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; font-size: 11px; border-radius: 4px; }
+  .status-item { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; font-size: 11px; border-radius: 4px; cursor: pointer; }
   .status-item:hover { background: var(--bg-hover); }
+  .status-item.active { background: rgba(0,212,255,0.12) !important; box-shadow: inset 3px 0 0 var(--accent); }
+  .status-item.active .status-name { color: var(--accent); font-weight: 600; }
   .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
   .status-name { flex: 1; margin-left: 7px; color: var(--text-secondary); font-size: 11px; }
   .status-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-primary); }
@@ -214,9 +216,9 @@
   .data-table tr:nth-child(even):hover td { background: var(--bg-hover); }
   .td-stt { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-align: center; min-width: 44px; }
   .td-id { font-family: var(--font-mono); font-size: 11px; color: var(--accent2); font-weight: 600; }
-  .td-action { text-align: center; cursor: pointer; color: var(--text-muted); font-size: 14px; min-width: 36px; padding: 7px 6px; }
-  .td-action:hover { color: var(--accent); }
-  .th-action { width: 36px; min-width: 36px; text-align: center; }
+  .td-action { position: sticky; right: 0; z-index: 2; text-align: center; cursor: pointer; color: var(--text-muted); font-size: 14px; min-width: 36px; padding: 7px 6px; background: var(--bg-base); box-shadow: -3px 0 8px rgba(0,0,0,0.18); }
+  .td-action:hover { color: var(--accent); background: var(--bg-hover); }
+  .th-action { position: sticky; right: 0; z-index: 52; width: 36px; min-width: 36px; text-align: center; background: var(--bg-panel) !important; box-shadow: -3px 0 8px rgba(0,0,0,0.18); }
 
   .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.5px; }
   .status-ok     { background: rgba(0,230,118,0.12); color: var(--success); border: 1px solid rgba(0,230,118,0.2); }
@@ -323,6 +325,14 @@
   tr.barcode-highlight td { animation: highlight-pulse 1.5s ease; }
   @keyframes highlight-pulse { 0% { background:rgba(0,255,157,0.3) !important; } 100% { background:transparent; } }
   .scan-match-badge { display:inline-block; background:var(--accent3); color:#000; font-family:var(--font-mono); font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; margin-left:6px; }
+
+  /* ====== TAGS ====== */
+  .tag-chip { display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:600;background:rgba(0,212,255,0.12);color:var(--accent);border:1px solid rgba(0,212,255,0.3);white-space:nowrap;font-family:var(--font-mono);letter-spacing:0.2px; }
+  .tag-chip .tag-remove { cursor:pointer;opacity:0.55;font-size:9px;line-height:1;padding:0 1px; }
+  .tag-chip .tag-remove:hover { opacity:1;color:var(--danger); }
+  .tag-suggestion { display:inline-flex;align-items:center;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:500;background:var(--bg-card);color:var(--text-muted);border:1px solid var(--border);cursor:pointer;transition:all 0.15s;font-family:var(--font-mono); }
+  .tag-suggestion:hover { border-color:var(--accent2);color:var(--accent);background:rgba(0,144,204,0.1); }
+  [data-theme="light"] .tag-chip { background:rgba(2,132,199,0.1);border-color:rgba(2,132,199,0.35); }
 
   /* ====== EDIT FORM ====== */
   .edit-group { margin-bottom: 20px; }
@@ -710,6 +720,11 @@
     <div class="sidebar-section" style="padding-bottom:10px">
       <div class="sidebar-label">Thống kê theo năm</div>
       <div id="yearStatsTable"></div>
+    </div>
+
+    <div class="sidebar-section" id="tagFilterSection" style="padding-bottom:10px;display:none">
+      <div class="sidebar-label">🏷️ Lọc theo nhãn</div>
+      <div id="tagFilterList"></div>
     </div>
 
     <div class="sidebar-section" style="padding-bottom:14px">
@@ -1141,7 +1156,8 @@ function onBarcodeFound(code, format) {
 }
 function applyScannedCode() {
   if (!lastScannedCode) return;
-  if (_scannerMode === 'serial') { applySerialScan(); return; }
+  if (_scannerMode === 'serial')     { applySerialScan(); return; }
+  if (_scannerMode === 'editserial') { applySerialScanEdit(); return; }
   document.getElementById('searchInput').value = lastScannedCode;
   applyFilters(); closeScanner();
   showToast(`🔍 Đã tìm kiếm: "${lastScannedCode}"`, 'success');
@@ -1252,6 +1268,39 @@ function applySerialScan() {
   closeScanner();
 }
 function restartScan() { resetScannerUI(); startScanner(); }
+
+// ====== SERIAL SCAN CHO FORM CHỈNH SỬA ======
+function openScannerForEditSerial() {
+  _scannerMode = 'editserial';
+  document.getElementById('scannerOverlay').classList.add('open');
+  resetScannerUI();
+  startScanner();
+}
+function applySerialScanEdit() {
+  if (!lastScannedCode) return;
+  const info = parseDeviceInfo(lastScannedCode);
+  const fieldMap = { F: info.serial || lastScannedCode, E: info.brand, D: info.model, M: info.cpu, N: info.ram, O: info.hdd, S: info.ip, X: info.mac };
+  let filledCount = 0;
+  Object.entries(fieldMap).forEach(([key, val]) => {
+    if (!val) return;
+    const selEl  = document.querySelector(`#editFormBody [data-key="${key}"]`);
+    const extraEl = document.querySelector(`#editFormBody [data-editkey-extra="${key}"]`);
+    if (selEl) {
+      if (selEl.tagName === 'SELECT') {
+        const opt = [...selEl.options].find(o => o.value.toLowerCase() === val.toLowerCase());
+        if (opt) { selEl.value = opt.value; filledCount++; }
+        else if (extraEl) { extraEl.value = val; filledCount++; }
+      } else {
+        selEl.value = val; filledCount++;
+      }
+    }
+  });
+  showToast(`✅ Đã điền ${filledCount} trường vào form chỉnh sửa`, 'success');
+  _scannerMode = 'search';
+  const applyBtn = document.getElementById('scanApplyBtn');
+  if (applyBtn) applyBtn.textContent = '🔍 Tìm kiếm ngay';
+  closeScanner();
+}
 function stopScanner() {
   scannerActive = false;
   if (codeReader) { try { codeReader.reset(); } catch(e){} codeReader = null; }
@@ -1651,6 +1700,14 @@ let visibleCols = new Set(COL_DEFS.filter(c => c.defaultVisible).map(c => c.key)
 let sortCol = null, sortDir = 1;
 let quickFilter = 'all', currentView = 'table';
 let _pendingEdits = {};
+// Persist pendingEdits qua localStorage để sống sót sau refresh
+const PENDING_KEY = 'snoc2_pendingEdits_v1';
+function savePendingEdits() {
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify(_pendingEdits)); } catch(e) {}
+}
+function loadPendingEdits() {
+  try { const raw = localStorage.getItem(PENDING_KEY); if (raw) _pendingEdits = JSON.parse(raw); } catch(e) {}
+}
 // FIX: lưu tham chiếu row đang xem để mở QR
 let _detailRow = null;
 // Lưu header thực tế từ GSheet { colIndex: 'Tiêu đề cột' }
@@ -1692,12 +1749,13 @@ function syncData(silent = false) {
       const row = allData.find(r => r.B === assetId);
       if (!row) return;
       const confirmed = Object.keys(pending).every(k => String(row[k]||'').replace(/\r/g,'').trim() === String(pending[k]||'').trim());
-      if (confirmed) delete _pendingEdits[assetId];
+      if (confirmed) { delete _pendingEdits[assetId]; savePendingEdits(); }
       else Object.assign(row, pending);
     });
     // FIX: khôi phục giá trị filter trước khi rebuild dropdowns
     updateStats(); buildTypeFilters();
     buildPersonFilter(); buildBrandFilter(); buildYearFilter(); buildYearStats();
+    buildTagFilterSidebar();
     // Khôi phục filter từ URL (chỉ lần đầu load)
     if (!_urlRestored) { restoreFiltersFromURL(); _urlRestored = true; }
     applyFiltersWithType();
@@ -1918,7 +1976,7 @@ function renderTable() {
       <div class="th-inner" onclick="sortBy('${c.key}')">${getColLabel(c, COL_DEFS.findIndex(d=>d.key===c.key))}
         <span class="sort-icon">${sortCol===c.key?(sortDir===1?' ▴':' ▾'):' ↕'}</span>
       </div></th>`).join('')}
-   <th class="th-action"></th></tr>`;
+   </tr>`;
 
   if (!filteredData.length) {
     body.innerHTML = `<tr><td colspan="${visible.length+1+(_aggregateMode?1:0)}" style="text-align:center;padding:60px;color:var(--text-muted)">Không có dữ liệu phù hợp</td></tr>`;
@@ -1937,7 +1995,7 @@ function renderTable() {
 
     const deptTd = _aggregateMode ? `<td class="td-center">${deptBadge(row._dept)}</td>` : '';
 
-    return `<tr class="${rowClass}">
+    return `<tr class="${rowClass}" onclick="openDetail(${idx})" style="cursor:pointer">
       ${deptTd}
       ${visible.map(c => {
         const alignClass = c.align === 'center' ? 'td-center' : 'td-left';
@@ -1953,7 +2011,6 @@ function renderTable() {
         const val = highlight(rawVal, q);
         return `<td class="${alignClass}" title="${escHtml(rawVal)}">${val || '<span style="color:var(--text-muted)">—</span>'}</td>`;
       }).join('')}
-      <td class="td-action" onclick="openDetail(${idx})">👁</td>
     </tr>`;
   }).join('');
 }
@@ -1976,6 +2033,7 @@ function renderCards() {
       <div class="card-row"><span class="card-key">Người QL</span><span class="card-val">${highlight(cleanVal(row.J), q)||'—'}</span></div>
       <div class="card-row"><span class="card-key">Vị trí</span><span class="card-val">${highlight(cleanVal(row.K), q)||'—'}</span></div>
       ${ip ? `<div class="card-row"><span class="card-key">IP</span><span class="card-val" style="font-family:var(--font-mono);font-size:10px;color:var(--accent2)">${highlight(ip, q)}</span></div>` : ''}
+      ${(()=>{ const tags=getAssetTags(row.B||''); if(!tags.length) return ''; return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;border-top:1px solid var(--border);padding-top:7px">${tags.map(t=>`<span class="tag-chip" onclick="event.stopPropagation();filterByTag('${escHtml(t).replace(/'/g,"\\'")}')" title="Lọc theo nhãn: ${escHtml(t)}" style="cursor:pointer">${escHtml(t)}</span>`).join('')}</div>`; })()}
     </div>`}).join('');
 }
 
@@ -2049,6 +2107,15 @@ function openDetail(idx) {
     html += `</div>`;
   });
   document.getElementById('modalBody').innerHTML = html;
+  // Hiển thị tags nếu có
+  const tagsHtml = renderTagsInline(row.B || '');
+  if (tagsHtml) {
+    const tagsSection = document.createElement('div');
+    tagsSection.style.cssText = 'padding:10px 20px 4px';
+    tagsSection.innerHTML = `<div style="font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--accent2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">🏷️ NHÃN / TAGS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${getAssetTags(row.B||'').map(t=>`<span class="tag-chip" onclick="closeModal();filterByTag('${escHtml(t).replace(/'/g,"\\'")}');" title="Lọc theo nhãn: ${escHtml(t)}" style="cursor:pointer">${escHtml(t)}</span>`).join('')}</div>`;
+    document.getElementById('modalBody').prepend(tagsSection);
+  }
   document.getElementById('modalOverlay').classList.add('open');
 }
 function closeModal(e) {
@@ -2056,8 +2123,72 @@ function closeModal(e) {
     document.getElementById('modalOverlay').classList.remove('open');
 }
 
+// ====== TAG SYSTEM ======
+const TAG_STORAGE_KEY = 'snoc2_tags_v1';
+const TAG_SUGGESTIONS = ['đã-bàn-giao','đang-sửa','chờ-thanh-lý','đang-bảo-hành','cần-kiểm-tra','đã-kiểm-kê','mượn-tạm','chờ-cấp-phát'];
+let _editTags = [];
+
+function loadAllTags() {
+  try { return JSON.parse(localStorage.getItem(TAG_STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+}
+function getAssetTags(assetId) {
+  return loadAllTags()[assetId] || [];
+}
+function saveAssetTags(assetId, tags) {
+  try {
+    const all = loadAllTags();
+    if (!tags || tags.length === 0) delete all[assetId]; else all[assetId] = tags;
+    localStorage.setItem(TAG_STORAGE_KEY, JSON.stringify(all));
+  } catch(e) {}
+}
+function renderTagEditor() {
+  const container = document.getElementById('tagEditorContainer'); if (!container) return;
+  const suggestions = TAG_SUGGESTIONS.filter(s => !_editTags.includes(s));
+  container.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;margin-bottom:8px;align-items:center">
+      ${_editTags.map(t => `<span class="tag-chip">${escHtml(t)}<span class="tag-remove" onclick="removeEditTag('${escHtml(t)}')">✕</span></span>`).join('')}
+      ${!_editTags.length ? '<span style="color:var(--text-muted);font-size:11px;font-style:italic">Chưa có nhãn nào</span>' : ''}
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+      <input id="tagInput" class="edit-input" type="text" placeholder="Nhập nhãn mới (vd: đang-sửa)..."
+        style="flex:1;font-size:12px;font-family:var(--font-mono)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();addEditTag();}">
+      <button type="button" onclick="addEditTag()"
+        style="flex-shrink:0;padding:7px 12px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.4);
+        color:var(--success);border-radius:var(--radius);cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap">+ Thêm</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      ${suggestions.map(s => `<span class="tag-suggestion" onclick="addEditTagVal('${escHtml(s)}')">${escHtml(s)}</span>`).join('')}
+    </div>`;
+}
+function addEditTag() {
+  const input = document.getElementById('tagInput'); if (!input) return;
+  const val = input.value.trim().toLowerCase().replace(/\s+/g,'-');
+  if (!val || _editTags.includes(val)) { input.value = ''; return; }
+  _editTags.push(val); input.value = ''; renderTagEditor();
+}
+function addEditTagVal(val) {
+  if (!_editTags.includes(val)) { _editTags.push(val); renderTagEditor(); }
+}
+function removeEditTag(tag) {
+  _editTags = _editTags.filter(t => t !== tag); renderTagEditor();
+}
+function renderTagsInline(assetId) {
+  const tags = getAssetTags(assetId);
+  if (!tags.length) return '';
+  return `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>`;
+}
+
 // ====== EDIT ======
 let _editRow = null;
+
+// Helper: DD/MM/YYYY → YYYY-MM-DD cho date input
+function toInputDate(str) {
+  const p = (str || '').trim().split('/');
+  if (p.length === 3 && p[2].length === 4)
+    return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  return '';
+}
 const EDIT_GROUPS = [
   { title:'📦 Thông tin cơ bản', fields:[
     { key:'D', label:'Tên TSCĐ',      type:'text' },
@@ -2065,7 +2196,7 @@ const EDIT_GROUPS = [
     { key:'F', label:'Serial',        type:'text' },
     { key:'G', label:'Ngày sử dụng',  type:'text', hint:'DD/MM/YYYY' },
     { key:'H', label:'SL',            type:'text' },
-    { key:'I', label:'Hiện trạng',    type:'select', options:['Hoạt động tốt','Hoạt động','Hỏng','Không tìm thấy','Chưa xác định'] },
+    { key:'I', label:'Hiện trạng',    type:'select', options:['Hoạt động tốt','Hỏng','Không tìm thấy','Chưa xác định'] },
     { key:'J', label:'Người quản lý', type:'text' },
     { key:'K', label:'Vị trí',        type:'text' },
     { key:'L', label:'Ghi chú',       type:'textarea' },
@@ -2090,11 +2221,19 @@ const EDIT_GROUPS = [
 ];
 
 function openEdit() {
-  const idEl = document.getElementById('modalId'); if (!idEl) return;
-  const maTaisan = idEl.textContent.trim();
-  _editRow = allData.find(r => (r.B||'').trim() === maTaisan) || null;
-  if (!_editRow) { showToast('Không tìm thấy dòng để sửa', 'error'); return; }
+  // FIX: Dùng _detailRow thay vì tìm lại trong allData để tránh lấy nhầm row khi có ID trùng
+  if (!_detailRow) { showToast('Không tìm thấy dòng để sửa', 'error'); return; }
+  _editRow = _detailRow;
   document.getElementById('editModalId').textContent = _editRow.B || '—';
+
+  // Lists động (đồng bộ với form Thêm mới)
+  const _editDynamicLists = {
+    'D': [...new Set(allData.map(r=>r.D).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+    'E': [...new Set(allData.map(r=>r.E).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+    'J': [...new Set(allData.map(r=>r.J).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+  };
+  const DATE_EDIT_KEYS = new Set(['G','Z']);
+
   let warnHtml = '';
   if (!APPS_SCRIPT_URL) warnHtml = `<div class="edit-setup-warn">⚠️ <strong>Chưa cấu hình Apps Script URL.</strong><br>Điền <code>APPS_SCRIPT_URL</code> trong CONFIG.</div>`;
   let html = warnHtml;
@@ -2103,14 +2242,44 @@ function openEdit() {
     grp.fields.forEach(f => {
       const val = (_editRow[f.key]||'').replace(/"/g,'&quot;'); let input = '';
       if (f.type === 'select') {
+        // Dropdown hiện trạng: chỉ dùng 4 giá trị cố định
         const currentVal = String(_editRow[f.key]||'').trim();
         const currentValLower = currentVal.toLowerCase();
-        const matched = f.options.some(o => o.toLowerCase() === currentValLower);
         const opts = f.options.map(o => `<option value="${o}"${o.toLowerCase()===currentValLower?' selected':''}>${o}</option>`).join('');
-        const extraOpt = (!matched && currentVal) ? `<option value="${currentVal}" selected>${currentVal} (hiện tại)</option>` : '';
-        input = `<select class="edit-select" data-key="${f.key}"><option value="">— Chọn —</option>${extraOpt}${opts}</select>`;
+        input = `<select class="edit-select" data-key="${f.key}"><option value="">— Chọn —</option>${opts}</select>`;
       } else if (f.type === 'textarea') {
         input = `<textarea class="edit-textarea" data-key="${f.key}" rows="2">${escHtml(_editRow[f.key]||'')}</textarea>`;
+      } else if (DATE_EDIT_KEYS.has(f.key)) {
+        // Date picker (đồng bộ với Thêm mới)
+        const dateVal = toInputDate(_editRow[f.key] || '');
+        input = `<input class="edit-input" data-key="${f.key}" data-edittype="date" type="date" value="${dateVal}">`;
+      } else if (f.key === 'F') {
+        // Serial + nút quét barcode (đồng bộ với Thêm mới)
+        input = `<div style="display:flex;gap:6px;align-items:center">
+          <input class="edit-input" data-key="F" type="text" value="${val}" placeholder="S/N hoặc quét barcode..." style="flex:1;font-family:var(--font-mono)">
+          <button type="button" onclick="openScannerForEditSerial()" title="Quét barcode / QR để điền serial"
+            style="flex-shrink:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+            background:transparent;border:1px solid var(--accent2);color:var(--accent);border-radius:var(--radius);
+            cursor:pointer;font-size:13px;transition:all 0.2s"
+            onmouseover="this.style.background='rgba(0,212,255,0.12)'"
+            onmouseout="this.style.background='transparent'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/>
+              <path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/>
+              <line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="17" y2="12"/>
+              <line x1="12" y1="7" x2="12" y2="17"/>
+            </svg>
+          </button>
+        </div>`;
+      } else if (_editDynamicLists[f.key]) {
+        // Dropdown động + ô nhập mới (đồng bộ với Thêm mới)
+        const list = _editDynamicLists[f.key];
+        const currentVal = (_editRow[f.key] || '').trim();
+        const matched = list.some(o => o === currentVal);
+        const opts = list.map(o => `<option value="${escHtml(o)}"${o === currentVal ? ' selected' : ''}>${escHtml(o)}</option>`).join('');
+        const extraOpt = (!matched && currentVal) ? `<option value="${escHtml(currentVal)}" selected>${escHtml(currentVal)} (hiện tại)</option>` : '';
+        input = `<select class="edit-select" data-key="${f.key}"><option value="">— Chọn —</option>${extraOpt}${opts}</select>
+                 <input class="edit-input" data-editkey-extra="${f.key}" type="text" placeholder="Hoặc nhập mới..." style="margin-top:5px;font-size:11px;opacity:0.85">`;
       } else {
         input = `<input class="edit-input" data-key="${f.key}" type="text" value="${val}"${f.hint?` placeholder="${f.hint}"`:''}>`;
       }
@@ -2119,6 +2288,13 @@ function openEdit() {
     html += `<div class="edit-row"><div class="edit-label" style="color:var(--text-muted)">Mã TS (ID)</div><div class="edit-readonly">${_editRow.B||'—'} · Hàng ${_editRow._sheetRow||'?'}</div></div></div>`;
   });
   document.getElementById('editFormBody').innerHTML = html;
+  // ── Tags ──
+  _editTags = getAssetTags(_editRow.B || '').slice();
+  const tagSection = document.createElement('div');
+  tagSection.className = 'edit-group';
+  tagSection.innerHTML = `<div class="edit-group-title">🏷️ Nhãn / Tags tùy chỉnh</div><div id="tagEditorContainer"></div>`;
+  document.getElementById('editFormBody').appendChild(tagSection);
+  renderTagEditor();
   document.getElementById('saveStatus').textContent = '';
   document.getElementById('editOverlay').classList.add('open');
 }
@@ -2133,10 +2309,21 @@ async function saveEdit() {
   const updates = {};
   document.querySelectorAll('#editFormBody [data-key]').forEach(el => {
     const key = el.getAttribute('data-key');
-    const newVal = el.value.replace(/\r/g,'').trim();
+    let newVal = el.value.replace(/\r/g,'').trim();
+    // Convert date: YYYY-MM-DD → DD/MM/YYYY
+    if (el.getAttribute('data-edittype') === 'date' && newVal) {
+      const p = newVal.split('-');
+      if (p.length === 3) newVal = `${p[2]}/${p[1]}/${p[0]}`;
+    }
     const oldVal = String(_editRow[key]||'').replace(/\r/g,'').trim();
     if (el.tagName === 'SELECT' && newVal === '') return;
     if (newVal !== oldVal) updates[key] = newVal;
+  });
+  // Xử lý ô nhập tự do của dynamic select (ghi đè nếu người dùng nhập tay)
+  document.querySelectorAll('#editFormBody [data-editkey-extra]').forEach(el => {
+    const key = el.getAttribute('data-editkey-extra');
+    const val = el.value.replace(/\r/g,'').trim();
+    if (val) updates[key] = val;
   });
   if (!Object.keys(updates).length) { showToast('Không có thay đổi nào', 'info'); closeEdit(); return; }
   const saveBtn = document.getElementById('saveBtn'); const statusEl = document.getElementById('saveStatus');
@@ -2154,9 +2341,11 @@ async function saveEdit() {
       document.body.appendChild(script);
     });
     _pendingEdits[_editRow.B] = { ...updates };
+    savePendingEdits(); // persist qua refresh
     Object.assign(_editRow, updates);
     const globalRow = allData.find(r => r.B === _editRow.B);
     if (globalRow) Object.assign(globalRow, updates);
+    saveAssetTags(_editRow.B, _editTags);
     if (currentView === 'table') renderTable(); else renderCards();
     const savedRow = _editRow; closeEdit(); applyFilters();
     const updatedIdx = filteredData.findIndex(r => r.B === savedRow.B);
@@ -2619,12 +2808,14 @@ function updateStats() {
   const colors = ['#00e676','#ff4444','#ffb300','#00d4ff','#7a8baa'];
   let i = 0;
   document.getElementById('statusBar').innerHTML =
-    Object.entries(statusMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v]) =>
-      `<div class="status-item">
+    Object.entries(statusMap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v]) => {
+      const isActive = _statusFilter === k;
+      return `<div class="status-item${isActive?' active':''}" onclick="filterByStatus('${escHtml(k).replace(/'/g,"\\'")}')">
         <div class="status-dot" style="background:${colors[i++%colors.length]}"></div>
         <div class="status-name" title="${escHtml(k)}">${escHtml(k.length>22?k.slice(0,22)+'…':k)}</div>
         <div class="status-count">${v}</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
 }
 
 function buildTypeFilters() {
@@ -2641,6 +2832,42 @@ function buildTypeFilters() {
 
 // FIX: filterByType dùng state riêng thay vì gán vào searchInput
 let _typeFilter = '';
+let _statusFilter = '';
+let _tagFilter = '';
+
+function filterByStatus(val) {
+  _statusFilter = (_statusFilter === val) ? '' : val;
+  updateStats(); // re-render để cập nhật active state
+  applyFiltersWithType();
+}
+function filterByTag(tag) {
+  _tagFilter = (_tagFilter === tag) ? '' : tag;
+  buildTagFilterSidebar();
+  applyFiltersWithType();
+}
+function buildTagFilterSidebar() {
+  const allTagsMap = {};
+  const tagsData = loadAllTags();
+  // Đếm tag theo những asset đang có trong allData
+  allData.forEach(r => {
+    const tags = tagsData[r.B] || [];
+    tags.forEach(t => { allTagsMap[t] = (allTagsMap[t]||0)+1; });
+  });
+  const section = document.getElementById('tagFilterSection');
+  const list = document.getElementById('tagFilterList');
+  if (!section || !list) return;
+  const entries = Object.entries(allTagsMap).sort((a,b)=>b[1]-a[1]);
+  if (!entries.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  list.innerHTML = entries.map(([tag, count]) => {
+    const isActive = _tagFilter === tag;
+    return `<div class="nav-item${isActive?' active':''}" onclick="filterByTag('${escHtml(tag).replace(/'/g,"\\'")}')">
+      <span class="nav-icon">🏷️</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-mono);font-size:11px">${escHtml(tag)}</span>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">${count}</span>
+    </div>`;
+  }).join('');
+}
 function filterByType(type, el) {
   const isActive = el.classList.contains('active');
   document.querySelectorAll('[data-type]').forEach(e => e.classList.remove('active'));
@@ -2661,6 +2888,10 @@ function applyFiltersWithType() {
   filteredData = allData.filter(row => {
     // Type filter chính xác theo cột D
     if (_typeFilter && row.D !== _typeFilter) return false;
+    // Status filter chính xác theo cột I
+    if (_statusFilter && (row.I||'(Chưa rõ)') !== _statusFilter) return false;
+    // Tag filter
+    if (_tagFilter && !getAssetTags(row.B||'').includes(_tagFilter)) return false;
     const status = (row.I||'').toLowerCase();
     const age = getDeviceAgeYears(row);
     if (quickFilter === 'ok')     { if (!status.includes('hoạt động')) return false; }
@@ -2813,6 +3044,8 @@ function updateFilterChips() {
   const chips = [];
   if (qfLabel)  chips.push({ label:'📋 '+qfLabel, clear:()=>{ document.querySelector('[data-filter="all"]').click(); } });
   if (_typeFilter) chips.push({ label:'🔧 '+_typeFilter, clear:()=>{ _typeFilter=''; document.querySelectorAll('[data-type]').forEach(e=>e.classList.remove('active')); applyFiltersWithType(); } });
+  if (_statusFilter) chips.push({ label:'🔵 '+_statusFilter, clear:()=>{ _statusFilter=''; updateStats(); applyFiltersWithType(); } });
+  if (_tagFilter)    chips.push({ label:'🏷️ '+_tagFilter,    clear:()=>{ _tagFilter=''; buildTagFilterSidebar(); applyFiltersWithType(); } });
   if (q)        chips.push({ label:'🔍 "'+(q.length>20?q.slice(0,20)+'…':q)+'"', clear:()=>{ document.getElementById('searchInput').value=''; applyFilters(); } });
   if (personF)  chips.push({ label:'👤 '+personF, clear:()=>{ document.getElementById('personFilter').value=''; applyFilters(); } });
   if (brandF)   chips.push({ label:'🏭 '+brandF,  clear:()=>{ document.getElementById('brandFilter').value='';  applyFilters(); } });
@@ -2831,6 +3064,8 @@ function updateFilterChips() {
     document.getElementById('personFilter').value = '';
     document.getElementById('brandFilter').value = '';
     _typeFilter = ''; document.querySelectorAll('[data-type]').forEach(e=>e.classList.remove('active'));
+    _statusFilter = ''; updateStats();
+    _tagFilter = ''; buildTagFilterSidebar();
     document.querySelector('[data-filter="all"]')?.click();
   });
 }
@@ -2907,6 +3142,7 @@ window.addEventListener('load', () => {
     const saved = localStorage.getItem('snoc2-theme');
     if (saved === 'light') { document.body.setAttribute('data-theme','light'); document.getElementById('themeToggle').textContent='☀️'; }
   } catch(e){}
+  loadPendingEdits(); // khôi phục edits chưa được confirm từ GSheets
   initDept();
   updateKKProgressBadge();
 });
