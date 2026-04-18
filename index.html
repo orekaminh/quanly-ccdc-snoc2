@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SNOC2 — Quản Lý CCDC & TSCĐ</title>
+<title>Quản Lý CCDC & TSCĐ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/zxing-js/0.21.3/zxing.min.js"></script>
@@ -486,6 +486,105 @@
   /* ====== ADD NEW MODAL ====== */
   .add-overlay { display:none; position:fixed; inset:0; z-index:1050; background:rgba(0,0,0,0.75); align-items:center; justify-content:center; }
   .add-overlay.open { display:flex; }
+
+  /* ====== DEPT SELECTOR ====== */
+  /* Luôn dùng dark theme bất kể setting người dùng */
+  .dept-selector-overlay {
+    display: none; position: fixed; inset: 0; z-index: 2000;
+    background: #0a0e14;
+    align-items: center; justify-content: center; flex-direction: column;
+  }
+  .dept-selector-overlay::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);
+  }
+  .dept-selector-overlay.open { display: flex; }
+  .dept-selector-wrap { width: 100%; max-width: 700px; padding: 28px 24px; position: relative; z-index: 2; }
+  .dept-selector-header { text-align: center; margin-bottom: 36px; }
+  .dept-org-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #0090cc, #00d4ff);
+    color: #000; font-family: 'JetBrains Mono', monospace; font-weight: 800;
+    font-size: 12px; padding: 5px 14px; border-radius: 5px;
+    letter-spacing: 1.5px; margin-bottom: 14px;
+  }
+  .dept-org-name {
+    font-size: 11px; color: #7dd3fc; font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px; margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  .dept-selector-title {
+    font-size: 24px; font-weight: 700; color: #f1f5f9;
+    margin-bottom: 6px;
+  }
+  .dept-selector-sub {
+    font-size: 11px; color: #94a3b8;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+  }
+  .dept-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+  }
+  .dept-card {
+    background: #0f1520; border: 1px solid #334155;
+    border-radius: 10px; padding: 22px 16px 18px; cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .dept-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--dept-color); opacity: 0.6; transition: opacity 0.2s;
+  }
+  .dept-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(var(--dept-color-rgb),0.08) 0%, transparent 70%);
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .dept-card:hover {
+    border-color: var(--dept-color);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(var(--dept-color-rgb), 0.12);
+  }
+  .dept-card:hover::before { opacity: 1; }
+  .dept-card:hover::after  { opacity: 1; }
+  .dept-card-badge {
+    display: inline-block; font-family: 'JetBrains Mono', monospace; font-weight: 800;
+    font-size: 20px; color: var(--dept-color);
+    text-shadow: 0 0 24px currentColor;
+    margin-bottom: 6px; letter-spacing: 1px; position: relative; z-index: 1;
+  }
+  .dept-card-name {
+    font-size: 11px; color: #cbd5e1; font-weight: 500;
+    line-height: 1.5; margin-bottom: 12px; position: relative; z-index: 1;
+  }
+  .dept-card-status {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 3px 9px; border-radius: 20px; position: relative; z-index: 1;
+  }
+  .dept-card-status.ready  { background: rgba(0,230,118,0.1);  color: #00e676; border: 1px solid rgba(0,230,118,0.25); }
+  .dept-card-status.pending{ background: rgba(255,179,0,0.08); color: #ffb300; border: 1px solid rgba(255,179,0,0.2);  }
+  .dept-card-arrow {
+    position: absolute; bottom: 10px; right: 13px;
+    font-size: 12px; color: #475569; opacity: 0;
+    transition: opacity 0.2s, transform 0.2s; z-index: 1;
+  }
+  .dept-card:hover .dept-card-arrow { opacity: 1; transform: translateX(4px); }
+  .dept-selector-footer {
+    text-align: center; margin-top: 22px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #64748b;
+    letter-spacing: 0.3px;
+  }
+
+  /* Switch dept button in header */
+  .switch-dept-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 11px; font-family: var(--font-mono);
+    padding: 5px 10px; border-radius: var(--radius);
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .switch-dept-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.07); }
 </style>
 </head>
 <body>
@@ -493,10 +592,10 @@
 <header class="header">
   <button class="mobile-menu-btn" onclick="toggleSidebar()" title="Menu">☰</button>
   <div class="header-logo">
-    <div class="logo-badge">SNOC2</div>
+    <div class="logo-badge" id="headerBadge">—</div>
     <div>
       <div class="header-title">Quản Lý CCDC & TSCĐ</div>
-      <div class="header-sub">TRUNG TÂM VẬN HÀNH KHAI THÁC MẠNG MIỀN NAM</div>
+      <div class="header-sub" id="headerSub">—</div>
     </div>
   </div>
   <div class="header-divider"></div>
@@ -505,6 +604,7 @@
     <div class="last-sync" id="lastSyncText">Chưa đồng bộ</div>
   </div>
   <div class="header-spacer"></div>
+  <button class="switch-dept-btn" onclick="openDeptSelector()" title="Đổi phòng ban">⇄ Đổi phòng</button>
   <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Chuyển Dark/Light mode">🌙</button>
   <button class="toolbar-btn" onclick="exportCSV()">⬇ Xuất CSV</button>
   <button class="sync-btn" id="syncBtn" onclick="syncData()">
@@ -553,6 +653,11 @@
       <div id="typeFilters"></div>
     </div>
 
+    <div class="sidebar-section" style="padding-bottom:10px">
+      <div class="sidebar-label">Thống kê theo năm</div>
+      <div id="yearStatsTable"></div>
+    </div>
+
     <div class="sidebar-section" style="padding-bottom:14px">
       <div class="sidebar-label">Công cụ</div>
       <div class="nav-item" onclick="openKiemKe()">
@@ -583,6 +688,9 @@
       </select>
       <select class="filter-select" id="brandFilter" onchange="applyFilters()">
         <option value="">— Hãng sản xuất —</option>
+      </select>
+      <select class="filter-select" id="yearFilter" onchange="applyFilters()" title="Lọc theo năm phát sinh">
+        <option value="">— Năm phát sinh —</option>
       </select>
       <div class="toolbar-sep"></div>
       <div class="view-tabs">
@@ -831,6 +939,22 @@
   </div>
 </div>
 
+<!-- Dept Selector -->
+<div class="dept-selector-overlay" id="deptSelectorOverlay">
+  <div class="dept-selector-wrap">
+    <div class="dept-selector-header">
+      <div class="dept-org-badge">NOC2</div>
+      <div class="dept-org-name">Trung tâm vận hành khai thác mạng Miền Nam — Ban KTM</div>
+      <div class="dept-selector-title">Chọn Phòng Ban</div>
+      <div class="dept-selector-sub">QUẢN LÝ CCDC & TSCĐ — CHỌN ĐƠN VỊ ĐỂ TIẾP TỤC</div>
+    </div>
+    <div class="dept-grid" id="deptGrid"></div>
+    <div class="dept-selector-footer">
+      Nhấn vào phòng ban để truy cập hệ thống quản lý tài sản của đơn vị đó
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
@@ -1068,10 +1192,287 @@ function stopScanner() {
 
 <script>
 // ====== CONFIG ======
-const SHEET_ID = '1lliLvTfWCH_Sh3Uy9mHpTeQi5dysQ9hy3Auj3CFeQKQ';
-const GID = '571226527';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwE7idrgymaQ8HV6wCGHdrfb_FW2NOa2ey5Wgu3ptb9twGVFpJTBvTB-TSuaJsZNOhN/exec';
-const EDIT_SECRET = 'SNOC2_SECRET_2024';
+// ====== DEPT CONFIG ======
+const DEPT_CONFIG = {
+  SNOC2: {
+    label:     'SNOC2',
+    fullName:  'Phòng Chuyển mạch',
+    color:     '#00d4ff',
+    colorRgb:  '0,212,255',
+    sheetId:   '1lliLvTfWCH_Sh3Uy9mHpTeQi5dysQ9hy3Auj3CFeQKQ',
+    gid:       '571226527',
+    scriptUrl: 'https://script.google.com/macros/s/AKfycbwE7idrgymaQ8HV6wCGHdrfb_FW2NOa2ey5Wgu3ptb9twGVFpJTBvTB-TSuaJsZNOhN/exec',
+    secret:    'SNOC2_SECRET_2024',
+    ready:     true
+  },
+  SOC2: {
+    label:     'SOC2',
+    fullName:  'Phòng Điều hành dịch vụ',
+    color:     '#00e676',
+    colorRgb:  '0,230,118',
+    sheetId:   '',
+    gid:       '',
+    scriptUrl: '',
+    secret:    'SOC2_SECRET_2024',
+    ready:     false
+  },
+  INOC2: {
+    label:     'INOC2',
+    fullName:  'Phòng IP Internet',
+    color:     '#ba68c8',
+    colorRgb:  '186,104,200',
+    sheetId:   '',
+    gid:       '',
+    scriptUrl: '',
+    secret:    'INOC2_SECRET_2024',
+    ready:     false
+  },
+  TNOC2: {
+    label:     'TNOC2',
+    fullName:  'Phòng Truyền dẫn',
+    color:     '#f06292',
+    colorRgb:  '240,98,146',
+    sheetId:   '',
+    gid:       '',
+    scriptUrl: '',
+    secret:    'TNOC2_SECRET_2024',
+    ready:     false
+  },
+  RNOC2: {
+    label:     'RNOC2',
+    fullName:  'Phòng Vô tuyến',
+    color:     '#ff9800',
+    colorRgb:  '255,152,0',
+    sheetId:   '',
+    gid:       '',
+    scriptUrl: '',
+    secret:    'RNOC2_SECRET_2024',
+    ready:     false
+  },
+  TONGHOP: {
+    label:     'TỔNG HỢP',
+    fullName:  'Tổng hợp toàn Trung tâm',
+    color:     '#fbbf24',
+    colorRgb:  '251,191,36',
+    type:      'aggregate',
+    ready:     true
+  }
+};
+
+// Active dept variables (set by initDept)
+let SHEET_ID = '', GID = '', APPS_SCRIPT_URL = '', EDIT_SECRET = '';
+let _activeDept = null;
+let _aggregateMode = false;
+
+// ====== DEPT INIT ======
+function initDept() {
+  // Luôn hiện màn chọn phòng khi mở app
+  openDeptSelector();
+}
+
+function loadDept(deptKey, showSelector) {
+  const cfg = DEPT_CONFIG[deptKey];
+  if (!cfg) { openDeptSelector(); return; }
+
+  _activeDept     = deptKey;
+  _aggregateMode  = cfg.type === 'aggregate';
+  SHEET_ID        = cfg.sheetId   || '';
+  GID             = cfg.gid       || '';
+  APPS_SCRIPT_URL = cfg.scriptUrl || '';
+  EDIT_SECRET     = cfg.secret    || '';
+
+  // (không lưu localStorage/URL để luôn hiện màn chọn phòng khi mở lại)
+
+  // Cập nhật accent color theo phòng
+  document.documentElement.style.setProperty('--accent',  cfg.color);
+  document.documentElement.style.setProperty('--accent2', adjustColor(cfg.color, -40));
+
+  // Cập nhật header
+  document.getElementById('headerBadge').textContent = cfg.label;
+  document.getElementById('headerSub').textContent   = _aggregateMode ? cfg.fullName : 'NOC2 · ' + cfg.fullName;
+  document.title = cfg.label + ' — Quản Lý CCDC & TSCĐ';
+
+  // Cập nhật footer sheet name
+  const footerSheet = document.getElementById('footerSheet');
+  if (footerSheet) footerSheet.textContent = cfg.label + ' · CCDC-TSCD';
+
+  // Ẩn/hiện nút Thêm mới tuỳ theo mode
+  const addBtn = document.querySelector('.toolbar-btn.success-btn[onclick="openAddNew()"]');
+  if (addBtn) addBtn.style.display = _aggregateMode ? 'none' : '';
+
+  // Đóng selector nếu đang mở
+  document.getElementById('deptSelectorOverlay').classList.remove('open');
+
+  // Reset data khi đổi phòng
+  allData = []; filteredData = [];
+  document.getElementById('loadingState').style.display = '';
+  document.getElementById('dataTable').style.display    = 'none';
+  document.getElementById('lastSyncText').textContent   = 'Chưa đồng bộ';
+  document.getElementById('statTotal').textContent  = '—';
+  document.getElementById('statActive').textContent = '—';
+  document.getElementById('statIssue').textContent  = '—';
+
+  // Sync dữ liệu
+  if (_aggregateMode) {
+    setTimeout(syncAggregate, 300);
+  } else {
+    if (!cfg.sheetId && !cfg.scriptUrl) {
+      showToast('⚠️ ' + cfg.label + ' chưa được cấu hình GSheet', 'warn');
+      return;
+    }
+    setTimeout(syncData, 300);
+  }
+}
+
+// Hàm làm tối/sáng màu hex đơn giản
+function adjustColor(hex, amount) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0, Math.min(255, (n >> 16) + amount));
+  const g = Math.max(0, Math.min(255, ((n >> 8) & 0xff) + amount));
+  const b = Math.max(0, Math.min(255, (n & 0xff) + amount));
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+// ====== AGGREGATE SYNC ======
+function syncAggregate() {
+  const btns = [document.getElementById('syncBtn'), document.getElementById('syncBtnMobile')];
+  const dot  = document.getElementById('syncDot');
+  btns.forEach(b => { if(b){ b.classList.add('syncing'); b.innerHTML = '<span>⟳</span> Đang tải...'; } });
+  dot.classList.add('pulse');
+
+  // Chỉ lấy các phòng đã cấu hình (không phải aggregate, có ít nhất sheetId hoặc scriptUrl)
+  const deptKeys = Object.entries(DEPT_CONFIG)
+    .filter(([k, c]) => c.type !== 'aggregate' && (c.sheetId || c.scriptUrl))
+    .map(([k]) => k);
+
+  if (!deptKeys.length) {
+    showToast('⚠️ Chưa có phòng nào được cấu hình GSheet', 'warn');
+    btns.forEach(b => { if(b){ b.classList.remove('syncing'); b.innerHTML = '<span>⟳</span> Đồng bộ GSheet'; } });
+    dot.classList.remove('pulse');
+    return;
+  }
+
+  document.getElementById('lastSyncText').textContent = `Đang tải ${deptKeys.length} phòng...`;
+
+  // Fetch từng phòng song song
+  const promises = deptKeys.map(key => fetchDeptRows(key));
+
+  Promise.allSettled(promises).then(results => {
+    const merged = [];
+    let successCount = 0;
+    results.forEach((res, i) => {
+      if (res.status === 'fulfilled' && res.value.length) {
+        res.value.forEach(row => { row._dept = deptKeys[i]; });
+        merged.push(...res.value);
+        successCount++;
+      }
+    });
+
+    allData = merged; filteredData = [];
+    Object.keys(_pendingEdits).forEach(aid => {
+      const row = allData.find(r => r.B === aid);
+      if (row) Object.assign(row, _pendingEdits[aid]);
+    });
+
+    applyFilters(); updateStats(); buildTypeFilters();
+    buildPersonFilter(); buildBrandFilter(); buildYearFilter(); buildYearStats();
+
+    const now = new Date().toLocaleTimeString('vi-VN');
+    document.getElementById('lastSyncText').textContent = `Đồng bộ: ${now} (${successCount}/${deptKeys.length} phòng)`;
+    document.getElementById('footerDataInfo').textContent = `${allData.length} bản ghi · ${deptKeys.length} phòng · ${new Date().toLocaleDateString('vi-VN')}`;
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('dataTable').style.display = '';
+    btns.forEach(b => { if(b){ b.classList.remove('syncing'); b.innerHTML = '<span>⟳</span> Đồng bộ GSheet'; } });
+    dot.classList.remove('pulse');
+    showToast(`✅ Tổng hợp ${allData.length} bản ghi từ ${successCount} phòng`, 'success');
+    updateKKProgressBadge();
+  });
+}
+
+// Fetch rows từ 1 phòng → Promise<row[]>
+function fetchDeptRows(deptKey) {
+  return new Promise((resolve) => {
+    const cfg = DEPT_CONFIG[deptKey];
+    const timeout = ms => new Promise(res => setTimeout(() => res([]), ms));
+
+    function parseRows(rawRows) {
+      const out = [];
+      for (const item of rawRows) {
+        const r = item.values || item;
+        if (!r || (Array.isArray(r) && r.every(c => !c))) continue;
+        const obj = {}; obj._sheetRow = item._sheetRow || 0;
+        COL_DEFS.forEach((col, idx) => { obj[col.key] = Array.isArray(r) ? (r[idx] != null ? String(r[idx]).trim() : '') : ''; });
+        if (!obj.B && !obj.D) continue;
+        out.push(obj);
+      }
+      return out;
+    }
+
+    // Thử Apps Script trước, fallback gviz
+    if (cfg.scriptUrl) {
+      const cb = 'agg_' + deptKey + '_' + Date.now();
+      const s  = document.createElement('script');
+      let timer = setTimeout(() => {
+        delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s);
+        tryGviz(cfg, resolve, parseRows);
+      }, 7000);
+      window[cb] = function(result) {
+        clearTimeout(timer); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s);
+        if (result && result.ok && Array.isArray(result.rows)) resolve(parseRows(result.rows));
+        else tryGviz(cfg, resolve, parseRows);
+      };
+      s.onerror = () => { clearTimeout(timer); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); tryGviz(cfg, resolve, parseRows); };
+      s.src = cfg.scriptUrl + '?callback=' + cb + '&action=getData&_=' + Date.now();
+      document.body.appendChild(s);
+    } else if (cfg.sheetId) {
+      tryGviz(cfg, resolve, parseRows);
+    } else {
+      resolve([]);
+    }
+  });
+}
+
+function tryGviz(cfg, resolve, parseRows) {
+  if (!cfg.sheetId) { resolve([]); return; }
+  const cb = 'gviz_' + cfg.label.replace(/\W/g,'') + '_' + Date.now();
+  const s  = document.createElement('script');
+  const timer = setTimeout(() => { delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); resolve([]); }, 8000);
+  window[cb] = function(data) {
+    clearTimeout(timer); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s);
+    try {
+      const allRows = (data.table.rows||[]).map(row => ({
+        values: row.c ? row.c.map(cell => { if (!cell) return ''; return (cell.f != null ? String(cell.f) : (cell.v != null ? String(cell.v) : '')).trim(); }) : [],
+        _sheetRow: 0
+      }));
+      // Tìm header row rồi bỏ qua
+      let start = 0;
+      for (let i = 0; i < Math.min(20, allRows.length); i++) {
+        const s = allRows[i].values.join(' ').toLowerCase();
+        if (s.includes('mã tài sản') || s.includes('tên tscđ') || s.includes('serial')) { start = i + 1; break; }
+      }
+      resolve(parseRows(allRows.slice(start)));
+    } catch(e) { resolve([]); }
+  };
+  s.onerror = () => { clearTimeout(timer); delete window[cb]; if (s.parentNode) s.parentNode.removeChild(s); resolve([]); };
+  s.src = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq?tqx=responseHandler:${cb}&headers=0&gid=${cfg.gid||'0'}&_=${Date.now()}`;
+  document.body.appendChild(s);
+}
+
+function openDeptSelector() {
+  const grid = document.getElementById('deptGrid');
+  grid.innerHTML = Object.entries(DEPT_CONFIG).map(([key, cfg]) => `
+    <div class="dept-card" style="--dept-color:${cfg.color};--dept-color-rgb:${cfg.colorRgb}"
+         onclick="loadDept('${key}', true)">
+      <div class="dept-card-badge">${cfg.label}</div>
+      <div class="dept-card-name">${cfg.fullName}</div>
+      <div class="dept-card-status ${cfg.ready ? 'ready' : 'pending'}">
+        ${cfg.ready ? '● Đã cấu hình' : '○ Chưa cấu hình'}
+      </div>
+      <span class="dept-card-arrow">→</span>
+    </div>
+  `).join('');
+  document.getElementById('deptSelectorOverlay').classList.add('open');
+}
 
 // ====== UTILS ======
 // FIX: hàm escape HTML để tránh XSS khi render dữ liệu từ Sheets
@@ -1143,6 +1544,7 @@ let sheetHeaders = {};
 
 // ====== SYNC ======
 function syncData(silent = false) {
+  if (_aggregateMode) { syncAggregate(); return; }
   // FIX: cập nhật cả nút desktop và mobile
   const btns = [document.getElementById('syncBtn'), document.getElementById('syncBtnMobile')];
   const dot = document.getElementById('syncDot');
@@ -1177,7 +1579,7 @@ function syncData(silent = false) {
     });
     // FIX: khôi phục giá trị filter trước khi rebuild dropdowns
     applyFilters(); updateStats(); buildTypeFilters();
-    buildPersonFilter(); buildBrandFilter();
+    buildPersonFilter(); buildBrandFilter(); buildYearFilter(); buildYearStats();
     document.getElementById('lastSyncText').textContent = 'Đồng bộ: ' + new Date().toLocaleTimeString('vi-VN');
     document.getElementById('footerDataInfo').textContent = `${allData.length} bản ghi · ${new Date().toLocaleDateString('vi-VN')}`;
     if (!silent) showToast('✅ Đồng bộ thành công — ' + allData.length + ' bản ghi', 'success');
@@ -1309,6 +1711,7 @@ function applyFilters() {
 
   document.getElementById('recordCount').innerHTML = `<span>${filteredData.length}</span> / ${allData.length} bản ghi`;
   updateFilterChips();
+  buildYearStats();
   if (currentView === 'table') renderTable(); else renderCards();
 }
 
@@ -1331,7 +1734,9 @@ function renderTable() {
   const body = document.getElementById('tableBody');
   const visible = COL_DEFS.filter(c => visibleCols.has(c.key));
 
+  const deptTh = _aggregateMode ? `<th><div class="th-inner">Phòng</div></th>` : '';
   head.innerHTML = `<tr>
+   ${deptTh}
    ${visible.map(c => `<th class="${sortCol===c.key?'active-sort':''}">
       <div class="th-inner" onclick="sortBy('${c.key}')">${getColLabel(c, COL_DEFS.findIndex(d=>d.key===c.key))}
         <span class="sort-icon">${sortCol===c.key?(sortDir===1?' ▴':' ▾'):' ↕'}</span>
@@ -1339,7 +1744,7 @@ function renderTable() {
    <th class="th-action"></th></tr>`;
 
   if (!filteredData.length) {
-    body.innerHTML = `<tr><td colspan="${visible.length+1}" style="text-align:center;padding:60px;color:var(--text-muted)">Không có dữ liệu phù hợp</td></tr>`;
+    body.innerHTML = `<tr><td colspan="${visible.length+1+(_aggregateMode?1:0)}" style="text-align:center;padding:60px;color:var(--text-muted)">Không có dữ liệu phù hợp</td></tr>`;
     return;
   }
 
@@ -1350,16 +1755,18 @@ function renderTable() {
     if (status.includes('hoạt động')) rowClass = 'row-ok';
     else if (status.includes('hỏng') || status.includes('broken')) rowClass = 'row-broken';
     else if (status.includes('không tìm') || status.includes('mất')) rowClass = 'row-lost';
-    if (age >= 7) rowClass = 'row-broken'; // thiết bị cũ ≥7 năm → đỏ
+    if (age >= 7) rowClass = 'row-broken';
     else if (age >= 5 && !rowClass) rowClass = 'row-aged';
 
+    const deptTd = _aggregateMode ? `<td class="td-center">${deptBadge(row._dept)}</td>` : '';
+
     return `<tr class="${rowClass}">
+      ${deptTd}
       ${visible.map(c => {
         const alignClass = c.align === 'center' ? 'td-center' : 'td-left';
         if (c.key === 'A') return `<td class="td-stt ${alignClass}">${escHtml(row.A) || idx+1}</td>`;
         if (c.key === 'B') return `<td class="td-id ${alignClass}">${escHtml(row.B)}</td>`;
         if (c.key === 'I') return `<td class="${alignClass}">${statusBadge(row.I)}</td>`;
-        // FIX: dùng escHtml để tránh XSS
         if (c.key === 'G') {
           const ageY = getDeviceAgeYears(row);
           const ageBadge = ageY >= 7 ? `<span class="age-badge age-crit">⚠ ${Math.floor(ageY)}năm</span>` : ageY >= 5 ? `<span class="age-badge age-warn">${Math.floor(ageY)}năm</span>` : '';
@@ -1379,6 +1786,7 @@ function renderCards() {
   if (!filteredData.length) { grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted)">Không có dữ liệu</div>`; return; }
   grid.innerHTML = filteredData.map((row, idx) => `
     <div class="asset-card" onclick="openDetail(${idx})">
+      ${_aggregateMode ? `<div style="margin-bottom:6px">${deptBadge(row._dept)}</div>` : ''}
       <div class="card-id">${escHtml(row.B)||'—'}</div>
       <div class="card-name">${escHtml(row.D||row.C)||'—'}</div>
       <div style="margin-bottom:8px">${statusBadge(row.I)}</div>
@@ -1388,6 +1796,17 @@ function renderCards() {
       <div class="card-row"><span class="card-key">Vị trí</span><span class="card-val">${escHtml(row.K)||'—'}</span></div>
       ${row.S ? `<div class="card-row"><span class="card-key">IP</span><span class="card-val" style="font-family:var(--font-mono);font-size:10px;color:var(--accent2)">${escHtml(row.S)}</span></div>` : ''}
     </div>`).join('');
+}
+
+// ====== DEPT BADGE ======
+function deptBadge(deptKey) {
+  if (!deptKey) return '';
+  const cfg = DEPT_CONFIG[deptKey];
+  const color = cfg ? cfg.color : '#94a3b8';
+  const label = cfg ? cfg.label : deptKey;
+  return `<span style="display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:10px;font-weight:700;
+    padding:2px 8px;border-radius:4px;letter-spacing:0.5px;
+    background:${color}22;color:${color};border:1px solid ${color}44">${label}</span>`;
 }
 
 // ====== STATUS BADGE ======
@@ -1412,6 +1831,11 @@ function openDetail(idx) {
   _detailRow = row;
   document.getElementById('modalId').textContent = row.B || '—';
   document.getElementById('modalName').textContent = row.D || row.C || 'Chi tiết tài sản';
+
+  // Ẩn/hiện nút Sửa theo mode
+  const editBtn = document.getElementById('editBtn');
+  if (editBtn) editBtn.style.display = _aggregateMode ? 'none' : '';
+
   const groups = [
     { title:'📦 Thông tin cơ bản',   cols:['A','B','C','D','E','F','G','H','I','J','K','L'] },
     { title:'💻 Thông số kỹ thuật',  cols:['M','N','O'] },
@@ -1419,6 +1843,15 @@ function openDetail(idx) {
     { title:'📅 Kiểm kê & Cập nhật', cols:['Y','Z','AA','AC','AD','AE','AF'] },
   ];
   let html = '';
+  // Hiển thị phòng ban nếu đang ở Tổng hợp
+  if (_aggregateMode && row._dept) {
+    const cfg = DEPT_CONFIG[row._dept];
+    html += `<div class="detail-section"><div class="detail-section-title">🏢 Đơn vị</div>
+      <div class="detail-row">
+        <div class="detail-key">Phòng ban</div>
+        <div class="detail-val">${deptBadge(row._dept)} <span style="margin-left:6px;color:var(--text-secondary);font-size:11px">${cfg?.fullName||''}</span></div>
+      </div></div>`;
+  }
   groups.forEach(grp => {
     const filtRows = grp.cols.filter(k => row[k]);
     if (!filtRows.length) return;
@@ -1528,7 +1961,7 @@ async function saveEdit() {
   const saveBtn = document.getElementById('saveBtn'); const statusEl = document.getElementById('saveStatus');
   saveBtn.disabled = true; saveBtn.textContent = '⏳ Đang lưu...'; statusEl.textContent = '';
   try {
-    const payload = { secret: EDIT_SECRET, sheetRow: _editRow._sheetRow, assetId: _editRow.B, updates, editor: 'web-snoc2' };
+    const payload = { secret: EDIT_SECRET, sheetRow: _editRow._sheetRow, assetId: _editRow.B, updates, editor: 'web-' + (_activeDept||'noc') };
     await new Promise((resolve, reject) => {
       const cbName = 'snoc2_save_' + Date.now();
       const url = APPS_SCRIPT_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(payload));
@@ -1694,7 +2127,7 @@ async function saveNewAsset() {
   btn.disabled = true; btn.textContent = '⏳ Đang thêm...'; statusEl.textContent = '';
 
   try {
-    const payload = { secret: EDIT_SECRET, action: 'addRow', newData, editor: 'web-snoc2' };
+    const payload = { secret: EDIT_SECRET, action: 'addRow', newData, editor: 'web-' + (_activeDept||'noc') };
     await new Promise((resolve, reject) => {
       const cbName = 'snoc2_add_' + Date.now();
       const url = APPS_SCRIPT_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(payload));
@@ -2056,6 +2489,12 @@ function applyFiltersWithType() {
     const brandF = document.getElementById('brandFilter').value;
     if (personF && row.J !== personF) return false;
     if (brandF  && row.E !== brandF)  return false;
+    const yearF = document.getElementById('yearFilter').value;
+    if (yearF) {
+      const p=(row.G||'').split('/');
+      const ry=p.length===3?p[2]:(p.length===1&&p[0].length===4?p[0]:null);
+      if(ry !== yearF) return false;
+    }
     const q = origSearchVal.toLowerCase();
     if (q) { const fields=[row.A,row.B,row.C,row.D,row.E,row.F,row.I,row.J,row.K,row.S]; return fields.some(f => f && f.toLowerCase().includes(q)); }
     return true;
@@ -2072,6 +2511,52 @@ function applyFiltersWithType() {
   document.getElementById('recordCount').innerHTML = `<span>${filteredData.length}</span> / ${allData.length} bản ghi`;
   updateFilterChips();
   if (currentView==='table') renderTable(); else renderCards();
+}
+
+function buildYearFilter() {
+  const sel = document.getElementById('yearFilter');
+  const cur = sel.value;
+  const years = [...new Set(allData.map(r => {
+    const p = (r.G||'').split('/');
+    return p.length===3 ? p[2] : (p.length===1&&p[0].length===4 ? p[0] : null);
+  }).filter(Boolean))].sort((a,b) => b-a);
+  sel.innerHTML = '<option value="">— Năm phát sinh —</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function buildYearStats() {
+  const ym = {};
+  allData.forEach(r => {
+    const p=(r.G||'').split('/');
+    const yr=p.length===3?p[2]:(p.length===1&&p[0].length===4?p[0]:null);
+    if(!yr) return;
+    if(!ym[yr]) ym[yr]={total:0,broken:0};
+    ym[yr].total++;
+    if((r.I||'').toLowerCase().includes('hỏng')) ym[yr].broken++;
+  });
+  const activeYr = document.getElementById('yearFilter').value;
+  const rows = Object.entries(ym).sort((a,b)=>b[0]-a[0]).map(([yr,d])=>`
+    <tr onclick="selectYearFilter('${yr}')" style="cursor:pointer;transition:background 0.15s;background:${activeYr===yr?'rgba(0,212,255,0.10)':'transparent'}"
+        onmouseover="this.style.background='rgba(0,212,255,0.07)'" onmouseout="this.style.background='${activeYr===yr?'rgba(0,212,255,0.10)':'transparent'}'">
+      <td style="padding:5px 6px;font-family:var(--font-mono);font-size:11px;color:${activeYr===yr?'var(--accent)':'var(--text-primary)'};font-weight:${activeYr===yr?700:400}">${yr}</td>
+      <td style="padding:5px 6px;text-align:right;font-family:var(--font-mono);font-size:11px;color:var(--accent)">${d.total}</td>
+      <td style="padding:5px 6px;text-align:right;font-family:var(--font-mono);font-size:11px;color:${d.broken>0?'var(--danger)':'var(--text-muted)'}">${d.broken||'—'}</td>
+    </tr>`).join('');
+  document.getElementById('yearStatsTable').innerHTML = rows ? `
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.5px">
+        <th style="text-align:left;padding:4px 6px;font-weight:600">NĂM</th>
+        <th style="text-align:right;padding:4px 6px;font-weight:600">PHÁT SINH</th>
+        <th style="text-align:right;padding:4px 6px;font-weight:600;color:var(--danger)">HƯ HỎNG</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>` : '<div style="color:var(--text-muted);font-size:11px;padding:6px">Chưa có dữ liệu</div>';
+}
+
+function selectYearFilter(yr) {
+  const sel = document.getElementById('yearFilter');
+  sel.value = sel.value === yr ? '' : yr;
+  applyFilters();
 }
 
 // FIX: buildPersonFilter/buildBrandFilter giữ nguyên giá trị đang chọn
@@ -2144,6 +2629,8 @@ function updateFilterChips() {
   if (q)        chips.push({ label:'🔍 "'+(q.length>20?q.slice(0,20)+'…':q)+'"', clear:()=>{ document.getElementById('searchInput').value=''; applyFilters(); } });
   if (personF)  chips.push({ label:'👤 '+personF, clear:()=>{ document.getElementById('personFilter').value=''; applyFilters(); } });
   if (brandF)   chips.push({ label:'🏭 '+brandF,  clear:()=>{ document.getElementById('brandFilter').value='';  applyFilters(); } });
+  const _yearF = document.getElementById('yearFilter').value;
+  if (_yearF) chips.push({ label:'📅 '+_yearF, clear:()=>{ document.getElementById('yearFilter').value=''; applyFilters(); } });
   const bar = document.getElementById('filterChipsBar');
   const container = document.getElementById('filterChips');
   if (!chips.length) { bar.classList.remove('visible'); return; }
@@ -2207,7 +2694,7 @@ window.addEventListener('load', () => {
     const saved = localStorage.getItem('snoc2-theme');
     if (saved === 'light') { document.body.setAttribute('data-theme','light'); document.getElementById('themeToggle').textContent='☀️'; }
   } catch(e){}
-  setTimeout(syncData, 500);
+  initDept();
   updateKKProgressBadge();
 });
 </script>
