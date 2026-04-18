@@ -32,11 +32,6 @@
     --glow: 0 0 20px rgba(0,212,255,0.15);
   }
 
-  /* Làm nổi bật tiêu đề cột đang được sắp xếp */
-  background: var(--bg-hover) !important; /* Đổi màu nền nhẹ khi đang sort */
-  border-bottom: 2px solid var(--accent) !important;
-}
-  
   th.active-sort {
   background: var(--bg-hover) !important; 
   border-bottom: 2px solid var(--accent) !important;
@@ -1603,13 +1598,13 @@ document.addEventListener('keydown', e => {
 
 <script>
 // ====== CONFIG ======
-const SHEET_ID = '1mTLlySjjAtOZm9Gea0rPSTS-xm3_28xf';
+const SHEET_ID = '1lliLvTfWCH_Sh3Uy9mHpTeQi5dysQ9hy3Auj3CFeQKQ';
 const GID = '571226527';
 
 // ── Điền URL sau khi deploy Apps Script ──────────────────────
 // Hướng dẫn: script.google.com → New project → dán Code.gs → Deploy → Web app
 // Execute as: Me | Who has access: Anyone → Copy URL dán vào đây
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyedwOn52DFow3MfeSI6eEKvrpFFHzBc_oGfooeb9OWPqeFB3QeRFAufA-tNdLveQlnXQ/exec';          // ← VD: 'https://script.google.com/macros/s/AKfy.../exec'
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwE7idrgymaQ8HV6wCGHdrfb_FW2NOa2ey5Wgu3ptb9twGVFpJTBvTB-TSuaJsZNOhN/exec';
 const EDIT_SECRET     = 'SNOC2_SECRET_2024'; // ← Phải khớp với SECRET trong Code.gs
 // ─────────────────────────────────────────────────────────────
 
@@ -1681,76 +1676,183 @@ let sortCol = null, sortDir = 1;
 let quickFilter = 'all';
 let currentView = 'table';
 
-// ====== SYNC DATA (Dùng JSONP API tự động dàn cột chuẩn xác) ======
-function syncData() {
+// Lưu các edit đang chờ server xác nhận (sheetRow → {colKey: newVal})
+// Dùng để bảo vệ optimistic update khỏi bị overwrite khi syncData về cache cũ
+let _pendingEdits = {};
+
+// ====== SYNC DATA ======
+// Ưu tiên dùng Apps Script (trả về _sheetRow thật, kể cả khi có hàng ẩn).
+// Nếu Apps Script chưa hỗ trợ action=getData → tự động fallback sang gviz.
+function syncData(silent = false) {
   const btn = document.getElementById('syncBtn');
   const dot = document.getElementById('syncDot');
-  btn.classList.add('syncing');
-  btn.textContent = '⟳ Đang tải...';
-  dot.classList.add('pulse');
+  if (!silent) {
+    btn.classList.add('syncing');
+    btn.textContent = '⟳ Đang tải...';
+    dot.classList.add('pulse');
+  }
 
-  // Khai báo hàm callback để nhận Data JSON từ Google
+  // ── Hàm parse chung: nhận mảng [{_sheetRow, values:[...]}] đã chuẩn hóa ──
+  function parseRowsIntoData(rowItems) {
+    const parsedData = [];
+    for (const item of rowItems) {
+      const r = item.values;
+      if (!r || r.every(c => !c)) continue;
+      const obj = {};
+      obj._sheetRow = item._sheetRow; // ROW THẬT trong Sheet (do Apps Script cấp)
+      COL_DEFS.forEach((col, idx) => { obj[col.key] = (r[idx] != null ? String(r[idx]).trim() : ''); });
+      if (!obj.B && !obj.D) continue;
+      const rowStr = r.join(' ').toLowerCase();
+      if (rowStr.includes('tên tscđ') || rowStr.includes('mã tài sản')) continue;
+      parsedData.push(obj);
+    }
+    return parsedData;
+  }
+
+  // ── Hàm xử lý sau khi có parsedData (dù từ AS hay gviz) ──
+  function onDataReady(parsedData) {
+    allData = parsedData;
+    // Bảo vệ optimistic update
+    Object.entries(_pendingEdits).forEach(([assetId, pending]) => {
+      const row = allData.find(r => r.B === assetId);
+      if (!row) return;
+      const confirmed = Object.keys(pending).every(k =>
+        String(row[k] || '').replace(/\r/g,'').trim() === String(pending[k] || '').trim()
+      );
+      if (confirmed) delete _pendingEdits[assetId];
+      else Object.assign(row, pending);
+    });
+    applyFilters(); updateStats(); buildTypeFilters(); buildPersonFilter(); buildBrandFilter();
+    document.getElementById('lastSyncText').textContent = 'Đồng bộ: ' + new Date().toLocaleTimeString('vi-VN');
+    document.getElementById('footerDataInfo').textContent = `${allData.length} bản ghi · ${new Date().toLocaleDateString('vi-VN')}`;
+    if (!silent) showToast('✅ Đồng bộ thành công — ' + allData.length + ' bản ghi', 'success');
+    else showToast('✅ Xác nhận: dữ liệu đã được lưu vào Sheets', 'success');
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('dataTable').style.display = '';
+    btn.classList.remove('syncing');
+    if (!silent) btn.innerHTML = '<span>⟳</span> Đồng bộ GSheet';
+    dot.classList.remove('pulse');
+  }
+
+  function onError(msg) {
+    showToast(msg, 'error');
+    btn.classList.remove('syncing');
+    btn.innerHTML = '<span>⟳</span> Đồng bộ GSheet';
+    dot.classList.remove('pulse');
+  }
+
+  // ── BƯỚC 1: Thử Apps Script (action=getData) — trả về row thật ──
+  if (APPS_SCRIPT_URL) {
+    const cbAS = 'snoc2_getData_' + Date.now();
+    let timerAS;
+    const scriptAS = document.createElement('script');
+
+    window[cbAS] = function(result) {
+      clearTimeout(timerAS);
+      delete window[cbAS];
+      if (scriptAS.parentNode) scriptAS.parentNode.removeChild(scriptAS);
+
+      if (result && result.ok && Array.isArray(result.rows)) {
+        // Apps Script trả về đúng format → dùng row thật
+        try {
+          onDataReady(parseRowsIntoData(result.rows));
+        } catch(e) { onError('❌ Lỗi parse dữ liệu Apps Script: ' + e.message); }
+      } else {
+        // Apps Script chưa hỗ trợ getData → fallback gviz
+        console.warn('Apps Script không hỗ trợ action=getData, dùng gviz fallback.');
+        syncViaGviz(silent);
+      }
+    };
+
+    timerAS = setTimeout(() => {
+      delete window[cbAS];
+      if (scriptAS.parentNode) scriptAS.parentNode.removeChild(scriptAS);
+      console.warn('Apps Script timeout, fallback sang gviz.');
+      syncViaGviz(silent);
+    }, 8000);
+
+    scriptAS.src = APPS_SCRIPT_URL + '?callback=' + cbAS + '&action=getData&_=' + Date.now();
+    scriptAS.onerror = () => {
+      clearTimeout(timerAS); delete window[cbAS];
+      if (scriptAS.parentNode) scriptAS.parentNode.removeChild(scriptAS);
+      console.warn('Apps Script lỗi, fallback sang gviz.');
+      syncViaGviz(silent);
+    };
+    const oldAS = document.getElementById('as-getData-jsonp');
+    if (oldAS) oldAS.remove();
+    scriptAS.id = 'as-getData-jsonp';
+    document.body.appendChild(scriptAS);
+    return; // chờ callback
+  }
+
+  // Không có APPS_SCRIPT_URL → thẳng gviz
+  syncViaGviz(silent);
+}
+
+// ── FALLBACK: gviz (không biết row thật khi có hàng ẩn) ──
+function syncViaGviz(silent = false) {
+  const btn = document.getElementById('syncBtn');
+  const dot = document.getElementById('syncDot');
+
   window.processGoogleData = function(data) {
     try {
       const rows = data.table.rows || [];
-      
-      // Chuẩn hóa mảng 2 chiều 
       const allRows = rows.map(row => {
         if (!row.c) return Array(35).fill('');
         return row.c.map(cell => {
           if (!cell) return '';
-          // Ưu tiên lấy giá trị đã format (chuỗi), nếu không có thì lấy giá trị raw
-          let val = (cell.f !== undefined && cell.f !== null) ? String(cell.f) : 
+          let val = (cell.f !== undefined && cell.f !== null) ? String(cell.f) :
                     (cell.v !== null && cell.v !== undefined ? String(cell.v) : '');
           return val.trim();
         });
       });
 
-      // Tự động tìm dòng Tiêu Đề (Header)
       let headerIndex = -1;
       for (let i = 0; i < Math.min(20, allRows.length); i++) {
         const rowStr = allRows[i].join(' ').toLowerCase();
         if (rowStr.includes('mã tài sản') || rowStr.includes('tên tscđ') || rowStr.includes('tên thiết bị') || rowStr.includes('serial')) {
-          headerIndex = i;
-          break;
+          headerIndex = i; break;
         }
       }
 
-      // Vị trí dòng dữ liệu bắt đầu
       const dataStart = headerIndex !== -1 ? headerIndex + 1 : 0;
-      const parsedData = [];
-
-      // Quét từng dòng dữ liệu và map vào Object
+      // Gviz bỏ qua hàng ẩn → _sheetRow có thể lệch, chỉ dùng khi không có Apps Script
+      const rowItems = [];
       for (let i = dataStart; i < allRows.length; i++) {
-        const r = allRows[i];
-        
-        // Bỏ qua nếu là dòng trống toàn bộ
+        rowItems.push({ _sheetRow: i + 1, values: allRows[i] });
+      }
+
+      const parsedData = [];
+      for (const item of rowItems) {
+        const r = item.values;
         if (r.every(c => !c)) continue;
-
         const obj = {};
-        obj._sheetRow = i + 1; // Số hàng thực tế trong Google Sheets (1-indexed)
-        COL_DEFS.forEach((col, idx) => {
-          obj[col.key] = r[idx] || '';
-        });
-
-        // Loại bỏ các dòng tiêu đề phụ bị lặp hoặc các dòng rác (không có Mã TS và Tên)
-        if (!obj.B && !obj.D) continue; 
+        obj._sheetRow = item._sheetRow;
+        COL_DEFS.forEach((col, idx) => { obj[col.key] = r[idx] || ''; });
+        if (!obj.B && !obj.D) continue;
         const rowStr = r.join(' ').toLowerCase();
         if (rowStr.includes('tên tscđ') || rowStr.includes('mã tài sản')) continue;
-
         parsedData.push(obj);
       }
 
       allData = parsedData;
-      applyFilters();
-      updateStats();
-      buildTypeFilters();
-      buildPersonFilter();
-      buildBrandFilter();
-      
+
+      // Bảo vệ optimistic update (dùng assetId làm key)
+      Object.entries(_pendingEdits).forEach(([assetId, pending]) => {
+        const row = allData.find(r => r.B === assetId);
+        if (!row) return;
+        const confirmed = Object.keys(pending).every(k =>
+          String(row[k] || '').replace(/\r/g,'').trim() === String(pending[k] || '').trim()
+        );
+        if (confirmed) delete _pendingEdits[assetId];
+        else Object.assign(row, pending);
+      });
+
+      applyFilters(); updateStats(); buildTypeFilters(); buildPersonFilter(); buildBrandFilter();
       document.getElementById('lastSyncText').textContent = 'Đồng bộ: ' + new Date().toLocaleTimeString('vi-VN');
       document.getElementById('footerDataInfo').textContent = `${allData.length} bản ghi · ${new Date().toLocaleDateString('vi-VN')}`;
-      showToast('✅ Đồng bộ thành công — ' + allData.length + ' bản ghi', 'success');
+      if (!silent) showToast('⚠️ Đồng bộ (gviz) — số hàng có thể lệch khi có hàng ẩn. Cập nhật Code.gs để fix.', 'info');
+      else showToast('✅ Xác nhận: dữ liệu đã được lưu vào Sheets', 'success');
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('dataTable').style.display = '';
 
@@ -1764,22 +1866,18 @@ function syncData() {
     }
   };
 
-  // Dọn dẹp script cũ nếu bấm nút nhiều lần
+  // Tạo thẻ script JSONP gviz
   const oldScript = document.getElementById('google-jsonp');
   if (oldScript) oldScript.remove();
-
-  // Tạo thẻ script để gọi API JSONP (vượt mọi rào cản CORS)
   const script = document.createElement('script');
   script.id = 'google-jsonp';
-  script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:processGoogleData&gid=${GID}&_=${Date.now()}`;
-  
+  script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:processGoogleData&headers=0&gid=${GID}&_=${Date.now()}`;
   script.onerror = () => {
     showToast('❌ Lỗi kết nối đến Google Sheets', 'error');
     btn.classList.remove('syncing');
     btn.innerHTML = '<span>⟳</span> Đồng bộ GSheet';
     dot.classList.remove('pulse');
   };
-
   document.body.appendChild(script);
 }
 
@@ -2068,8 +2166,17 @@ function openEdit() {
       const val = (_editRow[f.key] || '').replace(/"/g, '&quot;');
       let input = '';
       if (f.type === 'select') {
-        const opts = f.options.map(o => `<option${o===_editRow[f.key]?' selected':''}>${o}</option>`).join('');
-        input = `<select class="edit-select" data-key="${f.key}"><option value=""></option>${opts}</select>`;
+        const currentVal = String(_editRow[f.key] || '').trim();
+        const currentValLower = currentVal.toLowerCase();
+        const matched = f.options.some(o => o.toLowerCase() === currentValLower);
+        const opts = f.options.map(o => {
+          const isSelected = o.toLowerCase() === currentValLower ? ' selected' : '';
+          return `<option value="${o}"${isSelected}>${o}</option>`;
+        }).join('');
+        // Nếu giá trị trong Sheet không khớp option nào → thêm option hiển thị giá trị gốc
+        const extraOpt = (!matched && currentVal)
+          ? `<option value="${currentVal}" selected>${currentVal} (hiện tại)</option>` : '';
+        input = `<select class="edit-select" data-key="${f.key}"><option value="">— Chọn —</option>${extraOpt}${opts}</select>`;
       } else if (f.type === 'textarea') {
         input = `<textarea class="edit-textarea" data-key="${f.key}" rows="2">${_editRow[f.key]||''}</textarea>`;
       } else {
@@ -2110,11 +2217,18 @@ async function saveEdit() {
   }
 
   // Thu thập giá trị thay đổi
+  // Fix: normalize \r\n (Google Sheets) về \n (browser) trước khi so sánh
   const updates = {};
   document.querySelectorAll('#editFormBody [data-key]').forEach(el => {
     const key = el.getAttribute('data-key');
-    const newVal = el.value.trim();
-    if (newVal !== (_editRow[key] || '').trim()) {
+    const newVal = el.value.replace(/\r/g, '').trim();
+    const oldVal = String(_editRow[key] || '').replace(/\r/g, '').trim();
+
+    // Bỏ qua select rỗng: nghĩa là không có option nào khớp với dữ liệu cũ
+    // (không phải user cố tình xóa) → giữ nguyên, không ghi đè
+    if (el.tagName === 'SELECT' && newVal === '') return;
+
+    if (newVal !== oldVal) {
       updates[key] = newVal;
     }
   });
@@ -2135,34 +2249,71 @@ async function saveEdit() {
   try {
     const payload = {
       secret:   EDIT_SECRET,
-      sheetRow: _editRow._sheetRow,
+      sheetRow: _editRow._sheetRow, // giữ làm hint nhưng không dùng để ghi
+      assetId:  _editRow.B,         // dùng để tìm đúng hàng trên Sheet
       updates:  updates,
       editor:   'web-snoc2'
     };
 
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
+    // DÙNG JSONP (script tag) thay vì fetch()
+    // fetch() bị chặn hoàn toàn khi mở file bằng file:// (null origin policy)
+    // Script tag không bị chặn — cùng cơ chế với syncData()
+    await new Promise((resolve, reject) => {
+      const cbName = 'snoc2_save_' + Date.now();
+      const url = APPS_SCRIPT_URL
+        + '?callback=' + cbName
+        + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+
+      window[cbName] = function(result) {
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        if (result && result.ok) resolve(result);
+        else reject(new Error(result ? result.error : 'Unknown error'));
+      };
+
+      const script = document.createElement('script');
+      script.src = url;
+      script.onerror = function() {
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        reject(new Error('Không kết nối được Apps Script'));
+      };
+      // Timeout 15 giây
+      const timer = setTimeout(function() {
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        reject(new Error('Timeout — kiểm tra Apps Script URL'));
+      }, 15000);
+
+      // Clear timeout khi callback chạy
+      const origCb = window[cbName];
+      window[cbName] = function(r) { clearTimeout(timer); origCb(r); };
+
+      document.body.appendChild(script);
     });
 
-    const json = await res.json();
+    // Ghi nhận pending edit TRƯỚC KHI cập nhật local
+    // Dùng assetId (B) làm key — KHÔNG dùng _sheetRow vì gviz bỏ qua hàng ẩn nên _sheetRow có thể sai
+    _pendingEdits[_editRow.B] = { ...updates };
 
-    if (json.ok) {
-      // Cập nhật local data
-      Object.assign(_editRow, updates);
-      // Cập nhật allData luôn
-      const globalRow = allData.find(r => r._sheetRow === _editRow._sheetRow);
-      if (globalRow) Object.assign(globalRow, updates);
+    // Cập nhật local data tạm thời
+    Object.assign(_editRow, updates);
+    const globalRow = allData.find(r => r.B === _editRow.B);
+    if (globalRow) Object.assign(globalRow, updates);
 
-      showToast(`✅ Đã lưu ${Object.keys(updates).length} trường vào Sheets`, 'success');
-      closeEdit();
-      // Re-render
-      if (currentView === 'table') renderTable();
-      else renderCards();
-    } else {
-      throw new Error(json.error || 'Lỗi không xác định');
-    }
+    if (currentView === 'table') renderTable();
+    else renderCards();
+
+    // Refresh modal detail với dữ liệu mới (modal vẫn đang mở)
+    const savedRow = _editRow;
+    closeEdit();
+    // Tìm lại index trong filteredData sau khi render xong rồi mở lại modal
+    applyFilters();
+    const updatedIdx = filteredData.findIndex(r => r.B === savedRow.B);
+    if (updatedIdx !== -1) openDetail(updatedIdx);
+
+    showToast(`✅ Đã lưu ${Object.keys(updates).length} trường — đang chờ xác nhận từ Sheets...`, 'info');
+    setTimeout(() => syncData(true), 10000);
   } catch (err) {
     statusEl.style.color = 'var(--danger)';
     statusEl.textContent = '❌ ' + err.message;
