@@ -17,6 +17,7 @@
     --accent: #00d4ff;
     --accent2: #0090cc;
     --accent3: #00ff9d;
+    --accent-rgb: 0,212,255;
     --warn: #ffb300;
     --danger: #ff4444;
     --success: #00e676;
@@ -25,6 +26,8 @@
     --text-muted: #718096;
     --border: #334155;
     --border-light: #475569;
+    --input-bg: #161f30;
+    --input-border: #334155;
     --font-mono: 'JetBrains Mono', monospace;
     --font-main: 'Be Vietnam Pro', sans-serif;
     --radius: 6px;
@@ -48,16 +51,28 @@
     --bg-base: #f1f5f9; --bg-panel: #ffffff; --bg-card: #ffffff;
     --bg-hover: #e2e8f0; --bg-stripe: #f8fafc;
     --accent: #0284c7; --accent2: #0ea5e9; --accent3: #10b981;
+    --accent-rgb: 2,132,199;
     --warn: #d97706; --danger: #dc2626; --success: #059669;
-    --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8;
+    --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #6b7280;
     --border: #cbd5e1; --border-light: #e2e8f0;
     --shadow: 0 4px 12px rgba(0,0,0,0.05);
     --glow: 0 0 12px rgba(2,132,199,0.1);
+    --input-bg: #f8fafc; --input-border: #cbd5e1;
   }
   [data-theme="light"] .header-sub, [data-theme="light"] .last-sync { color: #475569 !important; font-weight: 600; }
-  [data-theme="light"] .search-input, [data-theme="light"] .filter-select { border: 1.5px solid #cbd5e1 !important; background: #ffffff !important; color: #0f172a !important; }
-  [data-theme="light"] .status-ok { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
   [data-theme="light"] .sidebar-label { color: #1e293b !important; }
+  [data-theme="light"] .status-ok     { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+  [data-theme="light"] .status-broken { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  [data-theme="light"] .status-lost   { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  [data-theme="light"] .status-other  { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+  [data-theme="light"] .age-warn      { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+  [data-theme="light"] .age-crit      { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+  [data-theme="light"] .nav-item.active { background: rgba(2,132,199,0.1) !important; box-shadow: inset 3px 0 0 var(--accent), var(--glow); }
+  [data-theme="light"] .stat-label    { color: #475569; }
+  [data-theme="light"] .filter-chip   { background: rgba(2,132,199,0.1); color: #0284c7; border-color: rgba(2,132,199,0.3); }
+  [data-theme="light"] .toolbar-btn   { background: #f8fafc; border-color: #cbd5e1; color: #374151; }
+  [data-theme="light"] .toolbar-btn.primary { background: rgba(2,132,199,0.1); border-color: #0ea5e9; color: #0284c7; }
+  [data-theme="light"] .toolbar-btn.success-btn { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.4); color: #059669; }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -165,12 +180,11 @@
   .toolbar { padding: 12px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 340px; }
   .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; pointer-events: none; }
-  .search-input { width: 100%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-mono); font-size: 12px; padding: 7px 10px 7px 32px; border-radius: var(--radius); outline: none; transition: border-color 0.2s; }
-  .search-input, .filter-select { border: 1px solid #334155 !important; background: #161f30 !important; color: #e2e8f4 !important; }
-  .search-input::placeholder { color: #718096 !important; opacity: 1; }
+  .search-input { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-primary); font-family: var(--font-mono); font-size: 12px; padding: 7px 10px 7px 32px; border-radius: var(--radius); outline: none; transition: border-color 0.2s; }
+  .search-input::placeholder { color: var(--text-muted); opacity: 1; }
   .search-input:hover, .filter-select:hover { border-color: var(--accent2) !important; background: var(--bg-hover); }
-  .search-input:focus, .filter-select:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(0,212,255,0.15) !important; outline: none; }
-  .filter-select, .toolbar-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); font-family: var(--font-main); font-size: 12px; padding: 7px 10px; border-radius: var(--radius); cursor: pointer; outline: none; transition: all 0.15s; }
+  .search-input:focus, .filter-select:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.15) !important; outline: none; }
+  .filter-select, .toolbar-btn { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-primary); font-family: var(--font-main); font-size: 12px; padding: 7px 10px; border-radius: var(--radius); cursor: pointer; outline: none; transition: all 0.15s; }
   .filter-select:focus, .toolbar-btn:hover { border-color: var(--accent2); }
   .filter-select.has-value { border-color: var(--accent2); color: var(--accent); background: rgba(0,144,204,0.08); font-weight: 500; }
   .search-input.has-value { border-color: var(--accent2); background: rgba(0,144,204,0.05); }
@@ -259,6 +273,7 @@
   .state-text { font-size: 13px; }
   .loading-spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes shimmer { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
 
   /* ====== FOOTER ====== */
   .footer { padding: 6px 16px; background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
@@ -358,6 +373,10 @@
   .sidebar-overlay.open { display:block; }
   .sidebar-close-btn { display:none; }
   .mobile-toolbar-actions { display:none; }
+  .mobile-filter-panel { display:none; padding:8px 10px; background:var(--bg-panel); border-bottom:1px solid var(--border); gap:8px; flex-wrap:wrap; }
+  .mobile-filter-panel.open { display:flex; }
+  .mobile-filter-panel .filter-select { flex:1 1 calc(50% - 4px); min-width:0; font-size:13px; padding:8px 6px; }
+  .mobile-filter-panel .toolbar-btn { flex:1 1 calc(50% - 4px); justify-content:center; padding:8px; font-size:12px; }
 
   @media (max-width:768px) {
     .header { padding:0 12px; height:52px; gap:8px; }
@@ -403,15 +422,15 @@
     .layout { height:calc(100vh - 52px); }
     .main { width:100%; }
     .toolbar { padding:8px 10px; gap:6px; flex-wrap:wrap; }
-    .search-wrap { flex:1 1 100%; max-width:100%; min-width:unset; order:1; }
+    .search-wrap { flex:1 1 calc(100% - 48px); max-width:100%; min-width:unset; order:1; }
+    .scan-btn { order:1; flex-shrink:0; }
     .search-input { font-size:14px; padding:9px 10px 9px 34px; }
-    .filter-select { flex:1 1 calc(50% - 4px); order:2; font-size:13px; padding:8px 6px; min-width:0; }
-    .toolbar-sep { display:none; }
-    .view-tabs { order:3; }
-    .view-tab { padding:8px 14px; font-size:12px; }
-    .toolbar-btn.primary { order:3; padding:8px 10px; font-size:12px; }
-    .mobile-toolbar-actions { display:flex; gap:6px; order:4; width:100%; }
-    .mobile-toolbar-actions .sync-btn, .mobile-toolbar-actions .toolbar-btn { flex:1; justify-content:center; padding:9px 8px; font-size:12px; }
+    .desktop-only { display:none !important; }
+    .mobile-toolbar-actions { display:flex; gap:6px; order:2; width:100%; }
+    .mobile-toolbar-actions .sync-btn { flex:1; justify-content:center; padding:9px 8px; font-size:12px; }
+    .mobile-toolbar-actions .toolbar-btn { flex:1; justify-content:center; padding:9px 8px; font-size:12px; }
+    .view-tabs { order:1; margin-left:auto; }
+    .view-tab { padding:8px 12px; font-size:12px; }
     .record-count { order:99; width:100%; margin-left:0; text-align:right; padding:2px 0; }
     .table-wrap { -webkit-overflow-scrolling:touch; }
     .data-table { font-size:11px; }
@@ -617,10 +636,6 @@
     cursor: pointer; transition: all 0.2s; white-space: nowrap;
   }
   .switch-dept-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.07); }
-  @media (max-width:768px) {
-    .switch-dept-label { display: none; }
-    .switch-dept-btn { width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 16px; }
-  }
 </style>
 </head>
 <body>
@@ -640,7 +655,7 @@
     <div class="last-sync" id="lastSyncText">Chưa đồng bộ</div>
   </div>
   <div class="header-spacer"></div>
-  <button class="switch-dept-btn" onclick="openDeptSelector()" title="Đổi phòng ban">⇄ <span class="switch-dept-label">Đổi phòng</span></button>
+  <button class="switch-dept-btn" onclick="openDeptSelector()" title="Đổi phòng ban">⇄ Đổi phòng</button>
   <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Chuyển Dark/Light mode">🌙</button>
   <button class="toolbar-btn" onclick="exportCSV()">⬇ Xuất CSV</button>
   <button class="sync-btn" id="syncBtn" onclick="syncData()">
@@ -719,27 +734,44 @@
           <line x1="12" y1="7" x2="12" y2="17"/>
         </svg>
       </button>
-      <select class="filter-select" id="personFilter" onchange="applyFilters()">
+      <!-- Desktop filters (ẩn trên mobile) -->
+      <select class="filter-select desktop-only" id="personFilter" onchange="applyFilters()">
         <option value="">— Người quản lý —</option>
       </select>
-      <select class="filter-select" id="brandFilter" onchange="applyFilters()">
+      <select class="filter-select desktop-only" id="brandFilter" onchange="applyFilters()">
         <option value="">— Hãng sản xuất —</option>
       </select>
-      <select class="filter-select" id="yearFilter" onchange="applyFilters()" title="Lọc theo năm phát sinh">
+      <select class="filter-select desktop-only" id="yearFilter" onchange="applyFilters()" title="Lọc theo năm phát sinh">
         <option value="">— Năm phát sinh —</option>
       </select>
-      <div class="toolbar-sep"></div>
+      <div class="toolbar-sep desktop-only"></div>
       <div class="view-tabs">
         <div class="view-tab active" id="tabTable" onclick="setView('table')">☰ Bảng</div>
         <div class="view-tab" id="tabCards" onclick="setView('cards')">⊞ Thẻ</div>
       </div>
-      <button class="toolbar-btn primary" onclick="openColPanel()">⚙ Cột hiển thị</button>
-      <button class="toolbar-btn success-btn" onclick="openAddNew()" title="Thêm tài sản mới">＋ Thêm mới</button>
-      <div class="record-count" id="recordCount"></div>
+      <button class="toolbar-btn primary desktop-only" onclick="openColPanel()">⚙ Cột hiển thị</button>
+      <button class="toolbar-btn success-btn desktop-only" onclick="openAddNew()" title="Thêm tài sản mới">＋ Thêm mới</button>
+      <!-- Mobile action row -->
       <div class="mobile-toolbar-actions">
-        <button class="toolbar-btn" onclick="exportCSV()">⬇ Xuất CSV</button>
-        <button class="sync-btn" id="syncBtnMobile" onclick="syncData()"><span>⟳</span> Đồng bộ</button>
+        <button class="toolbar-btn" id="mobileFilterBtn" onclick="toggleMobileFilters()">🔽 Lọc</button>
+        <button class="toolbar-btn primary" onclick="openColPanel()">⚙ Cột</button>
+        <button class="toolbar-btn success-btn" onclick="openAddNew()">＋ Thêm</button>
+        <button class="sync-btn" id="syncBtnMobile" onclick="syncData()"><span>⟳</span> Sync</button>
       </div>
+      <div class="record-count" id="recordCount"></div>
+    </div>
+    <!-- Mobile filter panel (ẩn mặc định) -->
+    <div class="mobile-filter-panel" id="mobileFilterPanel">
+      <select class="filter-select" id="personFilterM" onchange="syncMobileFilter('person')">
+        <option value="">— Người quản lý —</option>
+      </select>
+      <select class="filter-select" id="brandFilterM" onchange="syncMobileFilter('brand')">
+        <option value="">— Hãng sản xuất —</option>
+      </select>
+      <select class="filter-select" id="yearFilterM" onchange="syncMobileFilter('year')" title="Lọc theo năm phát sinh">
+        <option value="">— Năm phát sinh —</option>
+      </select>
+      <button class="toolbar-btn" onclick="exportCSV()">⬇ CSV</button>
     </div>
 
     <div class="filter-chips-bar" id="filterChipsBar">
@@ -1511,9 +1543,40 @@ function openDeptSelector() {
 }
 
 // ====== UTILS ======
-// FIX: hàm escape HTML để tránh XSS khi render dữ liệu từ Sheets
 function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Làm sạch giá trị không hợp lệ
+function cleanVal(v) {
+  const s = String(v||'').trim();
+  return (s === '???' || s === 'null' || s === 'undefined') ? '' : s;
+}
+
+// Highlight từ khóa tìm kiếm trong text
+function highlight(text, query) {
+  if (!query || !text) return escHtml(text);
+  const safe = escHtml(text);
+  const safeQ = query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return safe.replace(new RegExp('(' + safeQ + ')', 'gi'),
+    '<mark style="background:rgba(255,214,0,0.4);color:inherit;border-radius:2px;padding:0 1px">$1</mark>');
+}
+
+// Skeleton loading
+function showSkeleton(count = 6) {
+  const grid = document.getElementById('cardsGrid');
+  if (grid) grid.innerHTML = Array(count).fill(`
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;animation:shimmer 1.4s infinite linear;background-size:200% 100%">
+      <div style="height:10px;width:40%;background:var(--bg-hover);border-radius:3px;margin-bottom:10px"></div>
+      <div style="height:14px;width:75%;background:var(--bg-hover);border-radius:3px;margin-bottom:10px"></div>
+      <div style="height:20px;width:50%;background:var(--bg-hover);border-radius:4px;margin-bottom:12px"></div>
+      <div style="height:9px;width:90%;background:var(--bg-hover);border-radius:3px;margin-bottom:6px"></div>
+      <div style="height:9px;width:70%;background:var(--bg-hover);border-radius:3px;margin-bottom:6px"></div>
+      <div style="height:9px;width:80%;background:var(--bg-hover);border-radius:3px"></div>
+    </div>`).join('');
+  const body = document.getElementById('tableBody');
+  if (body) body.innerHTML = Array(8).fill(`
+    <tr>${Array(6).fill(`<td><div style="height:11px;background:var(--bg-hover);border-radius:3px;animation:shimmer 1.4s infinite linear"></div></td>`).join('')}</tr>`).join('');
 }
 
 function parseDate(str) {
@@ -1587,6 +1650,10 @@ function syncData(silent = false) {
   if (!silent) {
     btns.forEach(b => { if(b){ b.classList.add('syncing'); b.innerHTML = '<span>⟳</span> Đang tải...'; } });
     dot.classList.add('pulse');
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('dataTable').style.display = '';
+    document.getElementById('cardsView').style.display = currentView === 'cards' ? '' : 'none';
+    showSkeleton();
   }
 
   function parseRowsIntoData(rowItems) {
@@ -1769,6 +1836,7 @@ function renderTable() {
   const head = document.getElementById('tableHead');
   const body = document.getElementById('tableBody');
   const visible = COL_DEFS.filter(c => visibleCols.has(c.key));
+  const q = document.getElementById('searchInput').value.toLowerCase();
 
   const deptTh = _aggregateMode ? `<th><div class="th-inner">Phòng</div></th>` : '';
   head.innerHTML = `<tr>
@@ -1801,15 +1869,16 @@ function renderTable() {
       ${visible.map(c => {
         const alignClass = c.align === 'center' ? 'td-center' : 'td-left';
         if (c.key === 'A') return `<td class="td-stt ${alignClass}">${escHtml(row.A) || idx+1}</td>`;
-        if (c.key === 'B') return `<td class="td-id ${alignClass}">${escHtml(row.B)}</td>`;
+        if (c.key === 'B') return `<td class="td-id ${alignClass}">${highlight(cleanVal(row.B), q)}</td>`;
         if (c.key === 'I') return `<td class="${alignClass}">${statusBadge(row.I)}</td>`;
         if (c.key === 'G') {
           const ageY = getDeviceAgeYears(row);
           const ageBadge = ageY >= 7 ? `<span class="age-badge age-crit">⚠ ${Math.floor(ageY)}năm</span>` : ageY >= 5 ? `<span class="age-badge age-warn">${Math.floor(ageY)}năm</span>` : '';
-          return `<td class="${alignClass}" title="${escHtml(row.G)}">${escHtml(row.G)||'<span style="color:var(--text-muted)">—</span>'}${ageBadge}</td>`;
+          return `<td class="${alignClass}" title="${escHtml(row.G)}">${escHtml(cleanVal(row.G))||'<span style="color:var(--text-muted)">—</span>'}${ageBadge}</td>`;
         }
-        const val = escHtml(row[c.key]);
-        return `<td class="${alignClass}" title="${val}">${val || '<span style="color:var(--text-muted)">—</span>'}</td>`;
+        const rawVal = cleanVal(row[c.key]);
+        const val = highlight(rawVal, q);
+        return `<td class="${alignClass}" title="${escHtml(rawVal)}">${val || '<span style="color:var(--text-muted)">—</span>'}</td>`;
       }).join('')}
       <td class="td-action" onclick="openDetail(${idx})">👁</td>
     </tr>`;
@@ -1820,18 +1889,21 @@ function renderTable() {
 function renderCards() {
   const grid = document.getElementById('cardsGrid');
   if (!filteredData.length) { grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted)">Không có dữ liệu</div>`; return; }
-  grid.innerHTML = filteredData.map((row, idx) => `
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  grid.innerHTML = filteredData.map((row, idx) => {
+    const ip = cleanVal(row.S);
+    return `
     <div class="asset-card" onclick="openDetail(${idx})">
       ${_aggregateMode ? `<div style="margin-bottom:6px">${deptBadge(row._dept)}</div>` : ''}
-      <div class="card-id">${escHtml(row.B)||'—'}</div>
-      <div class="card-name">${escHtml(row.D||row.C)||'—'}</div>
+      <div class="card-id">${highlight(cleanVal(row.B), q)||'—'}</div>
+      <div class="card-name">${highlight(cleanVal(row.D||row.C), q)||'—'}</div>
       <div style="margin-bottom:8px">${statusBadge(row.I)}</div>
-      <div class="card-row"><span class="card-key">Hãng</span><span class="card-val">${escHtml(row.E)||'—'}</span></div>
-      <div class="card-row"><span class="card-key">Serial</span><span class="card-val">${escHtml(row.F)||'—'}</span></div>
-      <div class="card-row"><span class="card-key">Người QL</span><span class="card-val">${escHtml(row.J)||'—'}</span></div>
-      <div class="card-row"><span class="card-key">Vị trí</span><span class="card-val">${escHtml(row.K)||'—'}</span></div>
-      ${row.S ? `<div class="card-row"><span class="card-key">IP</span><span class="card-val" style="font-family:var(--font-mono);font-size:10px;color:var(--accent2)">${escHtml(row.S)}</span></div>` : ''}
-    </div>`).join('');
+      <div class="card-row"><span class="card-key">Hãng</span><span class="card-val">${highlight(cleanVal(row.E), q)||'—'}</span></div>
+      <div class="card-row"><span class="card-key">Serial</span><span class="card-val">${highlight(cleanVal(row.F), q)||'—'}</span></div>
+      <div class="card-row"><span class="card-key">Người QL</span><span class="card-val">${highlight(cleanVal(row.J), q)||'—'}</span></div>
+      <div class="card-row"><span class="card-key">Vị trí</span><span class="card-val">${highlight(cleanVal(row.K), q)||'—'}</span></div>
+      ${ip ? `<div class="card-row"><span class="card-key">IP</span><span class="card-val" style="font-family:var(--font-mono);font-size:10px;color:var(--accent2)">${highlight(ip, q)}</span></div>` : ''}
+    </div>`}).join('');
 }
 
 // ====== DEPT BADGE ======
@@ -2194,7 +2266,7 @@ function openQR() {
   const name = _detailRow.D || _detailRow.C || 'Tài sản';
   document.getElementById('qrAssetId').textContent = id;
   document.getElementById('qrAssetName').textContent = name;
-  document.getElementById('qrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('SNOC2/' + id + '/' + (_detailRow.F||''))}`;
+  document.getElementById('qrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent((_activeDept||'NOC') + '/' + id + '/' + (_detailRow.F||''))}`;
   document.getElementById('qrOverlay').classList.add('open');
 }
 function closeQR(e) {
@@ -2225,14 +2297,15 @@ function printQR() {
 }
 
 // ====== KIỂM KÊ MODULE ======
-// Lưu dữ liệu kiểm kê trong localStorage
+// Lưu dữ liệu kiểm kê trong localStorage — namespace theo phòng ban
+function kkKey() { return 'kk-' + (_activeDept || 'default'); }
 function kkLoad() {
   try {
-    const raw = localStorage.getItem('snoc2-kk');
+    const raw = localStorage.getItem(kkKey());
     return raw ? JSON.parse(raw) : { sessions: [], currentId: null };
   } catch(e) { return { sessions: [], currentId: null }; }
 }
-function kkSave(data) { try { localStorage.setItem('snoc2-kk', JSON.stringify(data)); } catch(e){} }
+function kkSave(data) { try { localStorage.setItem(kkKey(), JSON.stringify(data)); } catch(e){} }
 function kkGetCurrent() {
   const data = kkLoad();
   if (!data.currentId) return null;
@@ -2558,6 +2631,7 @@ function buildYearFilter() {
   }).filter(Boolean))].sort((a,b) => b-a);
   sel.innerHTML = '<option value="">— Năm phát sinh —</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
   if (cur) sel.value = cur;
+  syncDesktopToMobile();
 }
 
 function buildYearStats() {
@@ -2602,6 +2676,7 @@ function buildPersonFilter() {
   const sel = document.getElementById('personFilter');
   sel.innerHTML = '<option value="">— Người quản lý —</option>' + people.map(p => `<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
   if (currentVal) sel.value = currentVal;
+  syncDesktopToMobile();
 }
 function buildBrandFilter() {
   const currentVal = document.getElementById('brandFilter').value;
@@ -2609,6 +2684,7 @@ function buildBrandFilter() {
   const sel = document.getElementById('brandFilter');
   sel.innerHTML = '<option value="">— Hãng sản xuất —</option>' + brands.map(b => `<option value="${escHtml(b)}">${escHtml(b)}</option>`).join('');
   if (currentVal) sel.value = currentVal;
+  syncDesktopToMobile();
 }
 
 // ====== VIEW ======
@@ -2681,6 +2757,32 @@ function updateFilterChips() {
     document.getElementById('brandFilter').value = '';
     _typeFilter = ''; document.querySelectorAll('[data-type]').forEach(e=>e.classList.remove('active'));
     document.querySelector('[data-filter="all"]')?.click();
+  });
+}
+
+// ====== MOBILE FILTER PANEL ======
+function toggleMobileFilters() {
+  const panel = document.getElementById('mobileFilterPanel');
+  const btn   = document.getElementById('mobileFilterBtn');
+  const open  = panel.classList.toggle('open');
+  btn.textContent = open ? '🔼 Lọc' : '🔽 Lọc';
+}
+
+// Sync giá trị giữa desktop select và mobile select
+function syncMobileFilter(type) {
+  const map = { person: ['personFilter','personFilterM'], brand: ['brandFilter','brandFilterM'], year: ['yearFilter','yearFilterM'] };
+  const [desk, mob] = map[type];
+  const fromMob = document.getElementById(mob).value;
+  document.getElementById(desk).value = fromMob;
+  applyFilters();
+}
+
+function syncDesktopToMobile() {
+  const pairs = [['personFilter','personFilterM'],['brandFilter','brandFilterM'],['yearFilter','yearFilterM']];
+  pairs.forEach(([d,m]) => {
+    const mobEl = document.getElementById(m); if (!mobEl) return;
+    mobEl.innerHTML = document.getElementById(d).innerHTML;
+    mobEl.value = document.getElementById(d).value;
   });
 }
 
