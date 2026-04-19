@@ -429,9 +429,10 @@
     .scan-btn { order:1; flex-shrink:0; }
     .search-input { font-size:14px; padding:9px 10px 9px 34px; }
     .desktop-only { display:none !important; }
-    .mobile-toolbar-actions { display:flex; gap:6px; order:2; width:100%; }
-    .mobile-toolbar-actions .sync-btn { flex:1; justify-content:center; padding:9px 8px; font-size:12px; }
-    .mobile-toolbar-actions .toolbar-btn { flex:1; justify-content:center; padding:9px 8px; font-size:12px; }
+    .mobile-toolbar-actions { display:flex; gap:5px; order:2; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:1px; }
+    .mobile-toolbar-actions::-webkit-scrollbar { display:none; }
+    .mobile-toolbar-actions .sync-btn { flex:0 0 auto; justify-content:center; padding:8px 12px; font-size:12px; white-space:nowrap; }
+    .mobile-toolbar-actions .toolbar-btn { flex:0 0 auto; justify-content:center; padding:8px 10px; font-size:12px; white-space:nowrap; }
     .view-tabs { order:1; margin-left:auto; }
     .view-tab { padding:8px 12px; font-size:12px; }
     .record-count { order:99; width:100%; margin-left:0; text-align:right; padding:2px 0; }
@@ -805,16 +806,16 @@
       </div>
       <button class="toolbar-btn primary desktop-only" onclick="openColPanel()">⚙ Cột hiển thị</button>
       <button class="toolbar-btn success-btn desktop-only" onclick="openAddNew()" title="Thêm tài sản mới">＋ Thêm mới</button>
-      <button class="toolbar-btn desktop-only" onclick="openImport()" title="Import từ Excel/CSV" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">📥 Import</button>
-      <button class="toolbar-btn desktop-only" onclick="exportCSV()" title="Xuất dữ liệu ra CSV" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">📤 Export</button>
+      <button class="toolbar-btn desktop-only" onclick="openImport()" title="Import từ Excel/CSV" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">📂 Import</button>
+      <button class="toolbar-btn desktop-only" onclick="exportCSV()" title="Xuất dữ liệu ra CSV" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">⬇ Export</button>
       <button class="toolbar-btn desktop-only" onclick="openAuditLog()" title="Lịch sử chỉnh sửa" style="background:rgba(255,179,0,0.08);border-color:rgba(255,179,0,0.35);color:var(--warn)">🕓 Lịch sử</button>
       <!-- Mobile action row -->
       <div class="mobile-toolbar-actions">
         <button class="toolbar-btn" id="mobileFilterBtn" onclick="toggleMobileFilters()">🔽 Lọc</button>
         <button class="toolbar-btn primary" onclick="openColPanel()">⚙ Cột</button>
         <button class="toolbar-btn success-btn" onclick="openAddNew()">＋ Thêm</button>
-        <button class="toolbar-btn" onclick="openImport()" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">📥</button>
-        <button class="toolbar-btn" onclick="exportCSV()" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">📤</button>
+        <button class="toolbar-btn" onclick="openImport()" title="Import" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">📂 IMP</button>
+        <button class="toolbar-btn" onclick="exportCSV()" title="Export CSV" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">⬇ EXP</button>
         <button class="toolbar-btn" onclick="openAuditLog()" style="background:rgba(255,179,0,0.08);border-color:rgba(255,179,0,0.35);color:var(--warn)">🕓</button>
         <button class="sync-btn" id="syncBtnMobile" onclick="syncData()"><span>⟳</span> Sync</button>
       </div>
