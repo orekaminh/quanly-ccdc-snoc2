@@ -41,6 +41,20 @@
   .sort-icon { opacity: 0.3; transition: all 0.2s; }
   th.active-sort .sort-icon { opacity: 1; font-weight: bold; }
 
+  /* Light mode: active sort rõ hơn — nền violet nhạt + chữ đậm + underline dày */
+  [data-theme="light"] th.active-sort {
+    background: #DDD6FE !important;
+    border-bottom: 3px solid #5B21B6 !important;
+  }
+  [data-theme="light"] th.active-sort .th-inner {
+    color: #3B0764;
+    font-weight: 700;
+  }
+  [data-theme="light"] th.active-sort .sort-icon {
+    color: #5B21B6;
+    opacity: 1;
+  }
+
   tr.row-ok     td { background-color: rgba(100,255,218,0.07) !important; }
   tr.row-broken td { background-color: rgba(255,107,107,0.10) !important; }
   tr.row-lost   td { background-color: rgba(255,209,102,0.09) !important; }
@@ -49,65 +63,133 @@
   tr.row-returned td { background-color: rgba(87,203,255,0.08) !important; opacity: 0.75; }
   .data-table tr:hover td { background-color: rgba(100,255,218,0.08) !important; transition: background 0.2s; }
 
-  /* ====== LIGHT THEME ====== */
+  /* ====== LIGHT THEME — Warm Cream × Deep Violet ====== */
+  /*
+   * Triết lý: Thoát khỏi "corporate gray + sky blue" nhàm chán.
+   * Nền ấm cream (#FAF8F4) tạo cảm giác sang trọng, dễ chịu cho mắt.
+   * Violet (#5B21B6) thay vì xanh corporate — có cá tính, hiện đại (Linear/Stripe).
+   * Text warm-black (#1C1917) thay vì cold-slate — đọc thoải mái hơn.
+   */
   [data-theme="light"] {
-    --bg-base: #f1f5f9; --bg-panel: #ffffff; --bg-card: #ffffff;
-    --bg-hover: #e2e8f0; --bg-stripe: #f8fafc;
-    --accent: #0284c7; --accent2: #0ea5e9; --accent3: #10b981;
-    --accent-rgb: 2,132,199;
-    --warn: #d97706; --danger: #dc2626; --success: #059669;
-    --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #6b7280;
-    --border: #cbd5e1; --border-light: #e2e8f0;
-    --shadow: 0 4px 12px rgba(0,0,0,0.05);
-    --glow: 0 0 12px rgba(2,132,199,0.1);
-    --input-bg: #f8fafc; --input-border: #cbd5e1;
+    --bg-base:   #FAF8F4;   /* cream ấm — không phải trắng lạnh */
+    --bg-panel:  #FFFFFF;
+    --bg-card:   #FEFCF8;   /* trắng kem nhẹ */
+    --bg-hover:  #F0EBE1;   /* hover ấm, dễ nhận */
+    --bg-stripe: #F6F2EB;   /* striped row — đủ tương phản, không chói */
+
+    --accent:     #5B21B6;  /* deep violet — cá tính, không phải blue mass-market */
+    --accent2:    #7C3AED;  /* violet sáng hơn — hover/border */
+    --accent3:    #059669;  /* emerald — success/positive, tươi không sặc sỡ */
+    --accent-rgb: 91,33,182;
+
+    --warn:    #B45309;     /* amber đậm — dễ đọc trên nền sáng */
+    --danger:  #DC2626;
+    --success: #059669;
+
+    --text-primary:   #1C1917;  /* warm near-black, ấm hơn cold #0f172a */
+    --text-secondary: #6B5F56;  /* stone ấm */
+    --text-muted:     #A69D96;  /* muted — đủ nhìn, không lấn át */
+
+    --border:       #E5DDD3;    /* viền beige ấm */
+    --border-light: #EDE8E0;    /* viền mờ */
+
+    --shadow: 0 4px 16px rgba(28,25,23,0.08), 0 1px 3px rgba(28,25,23,0.05);
+    --glow:   0 0 16px rgba(91,33,182,0.12);
+
+    --input-bg:     #FEFCF8;
+    --input-border: #D6CFC5;
   }
-  [data-theme="light"] .header-sub, [data-theme="light"] .last-sync { color: #475569 !important; font-weight: 600; }
-  [data-theme="light"] .sidebar-label { color: #1e293b !important; }
-  [data-theme="light"] .status-ok     { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
-  [data-theme="light"] .status-broken { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-  [data-theme="light"] .status-lost   { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-  [data-theme="light"] .status-other    { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-  [data-theme="light"] .status-retired  { background: #ede9fe; color: #7c3aed; border: 1px solid #c4b5fd; }
-  [data-theme="light"] .status-returned { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
-  [data-theme="light"] .age-warn      { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
-  [data-theme="light"] .age-crit      { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
-  [data-theme="light"] .nav-item.active { background: rgba(2,132,199,0.1) !important; box-shadow: inset 3px 0 0 var(--accent), var(--glow); }
-  [data-theme="light"] .stat-label    { color: #475569; }
-  [data-theme="light"] .filter-chip   { background: rgba(2,132,199,0.1); color: #0284c7; border-color: rgba(2,132,199,0.3); }
-  [data-theme="light"] .toolbar-btn   { background: #f8fafc; border-color: #cbd5e1; color: #374151; }
-  [data-theme="light"] .toolbar-btn.primary { background: rgba(2,132,199,0.1); border-color: #0ea5e9; color: #0284c7; }
-  [data-theme="light"] .toolbar-btn.success-btn { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.4); color: #059669; }
-  /* Light mode: table hover — đồng nhất cho cả dòng chẵn lẻ */
-  [data-theme="light"] .data-table tr:hover td { background-color: rgba(2,132,199,0.14) !important; border-bottom-color: rgba(2,132,199,0.2) !important; }
+
+  /* Header & sidebar accent text */
+  [data-theme="light"] .header-sub,
+  [data-theme="light"] .last-sync  { color: #6B5F56 !important; font-weight: 600; }
+  [data-theme="light"] .sidebar-label { color: #5B21B6 !important; }
+
+  /* ── Status badges ── */
+  [data-theme="light"] .status-ok      { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; }
+  [data-theme="light"] .status-broken  { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+  [data-theme="light"] .status-lost    { background: #FEF3C7; color: #78350F; border: 1px solid #FCD34D; }
+  [data-theme="light"] .status-other   { background: #F0EBE1; color: #6B5F56; border: 1px solid #D6CFC5; }
+  [data-theme="light"] .status-retired { background: #EDE9FE; color: #5B21B6; border: 1px solid #C4B5FD; }
+  [data-theme="light"] .status-returned{ background: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
+  [data-theme="light"] .age-warn       { background: #FEF3C7; color: #78350F; border-color: #FCD34D; }
+  [data-theme="light"] .age-crit       { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+
+  /* ── Navigation ── */
+  [data-theme="light"] .nav-item.active {
+    background: rgba(91,33,182,0.08) !important;
+    box-shadow: inset 3px 0 0 var(--accent), var(--glow);
+  }
+  [data-theme="light"] .stat-label { color: #6B5F56; }
+
+  /* ── Chips & buttons ── */
+  [data-theme="light"] .filter-chip {
+    background: rgba(91,33,182,0.08);
+    color: #5B21B6;
+    border-color: rgba(91,33,182,0.25);
+  }
+  [data-theme="light"] .toolbar-btn {
+    background: #FEFCF8;
+    border-color: #D6CFC5;
+    color: #3A3330;
+  }
+  [data-theme="light"] .toolbar-btn.primary {
+    background: rgba(91,33,182,0.08);
+    border-color: rgba(124,58,237,0.5);
+    color: #5B21B6;
+  }
+  [data-theme="light"] .toolbar-btn.success-btn {
+    background: rgba(5,150,105,0.08);
+    border-color: rgba(5,150,105,0.35);
+    color: #059669;
+  }
+
+  /* ── Table ── */
+  [data-theme="light"] .data-table tr:hover td {
+    background-color: rgba(180,140,60,0.09) !important;   /* amber ấm — hài hòa với nền cream */
+    border-bottom-color: rgba(180,140,60,0.2) !important;
+  }
   [data-theme="light"] .data-table tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
-  [data-theme="light"] .data-table tbody tr:nth-child(even) td { background: #f4f7fb; }
-  [data-theme="light"] .data-table tbody tr:nth-child(even):hover td { background-color: rgba(2,132,199,0.14) !important; }
-  /* Light mode: row status colors — set trên td để override nth-child */
-  [data-theme="light"] tr.row-ok     td { background-color: rgba(5,150,105,0.10) !important; }
-  [data-theme="light"] tr.row-broken td { background-color: rgba(220,38,38,0.09) !important; }
-  [data-theme="light"] tr.row-lost   td { background-color: rgba(217,119,6,0.09) !important; }
-  /* row-aged: không tô màu nền ở light mode — badge là đủ */
-  [data-theme="light"] tr.row-retired  td { background-color: rgba(109,40,217,0.07) !important; opacity: 0.85; }
-  [data-theme="light"] tr.row-returned td { background-color: rgba(3,105,161,0.07) !important; opacity: 0.85; }
-  /* Light mode: hover vẫn thắng kể cả khi row có status color */
-  [data-theme="light"] tr.row-ok:hover     td,
+  [data-theme="light"] .data-table tbody tr:nth-child(even) td { background: #F6F2EB; }
+  [data-theme="light"] .data-table tbody tr:nth-child(even):hover td { background-color: rgba(180,140,60,0.09) !important; }
+
+  /* ── Row status colors — muted, dễ chịu mắt trên nền cream ── */
+  [data-theme="light"] tr.row-ok     td { background-color: rgba(16,185,129,0.07) !important; }   /* mint nhạt */
+  [data-theme="light"] tr.row-broken td { background-color: rgba(239,68,68,0.07)  !important; }   /* đỏ muted */
+  [data-theme="light"] tr.row-lost   td { background-color: rgba(245,158,11,0.08) !important; }   /* amber muted */
+  [data-theme="light"] tr.row-retired  td { background-color: rgba(139,92,246,0.06) !important; opacity: 0.85; }
+  [data-theme="light"] tr.row-returned td { background-color: rgba(59,130,246,0.06) !important; opacity: 0.85; }
+
+  /* Hover thắng status color */
+  [data-theme="light"] tr.row-ok:hover td,
   [data-theme="light"] tr.row-broken:hover td,
-  [data-theme="light"] tr.row-lost:hover   td,
-  [data-theme="light"] tr.row-retired:hover  td,
-  [data-theme="light"] tr.row-returned:hover td { background-color: rgba(2,132,199,0.16) !important; }
-  [data-theme="light"] tr.row-ok:hover     td:first-child,
+  [data-theme="light"] tr.row-lost:hover td,
+  [data-theme="light"] tr.row-retired:hover td,
+  [data-theme="light"] tr.row-returned:hover td { background-color: rgba(180,140,60,0.10) !important; }
+  [data-theme="light"] tr.row-ok:hover td:first-child,
   [data-theme="light"] tr.row-broken:hover td:first-child,
-  [data-theme="light"] tr.row-lost:hover   td:first-child,
-  [data-theme="light"] tr.row-retired:hover  td:first-child,
+  [data-theme="light"] tr.row-lost:hover td:first-child,
+  [data-theme="light"] tr.row-retired:hover td:first-child,
   [data-theme="light"] tr.row-returned:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
-  /* Light mode: edit code snippet */
-  [data-theme="light"] .edit-setup-warn code { background: rgba(2,132,199,0.1); color: #0284c7; }
-  /* Light mode: audit inputs */
+
+  /* ── Misc ── */
+  [data-theme="light"] .edit-setup-warn code { background: rgba(91,33,182,0.08); color: #5B21B6; }
   [data-theme="light"] .audit-search,
-  [data-theme="light"] .audit-filter { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+  [data-theme="light"] .audit-filter { background: #FEFCF8; border-color: #D6CFC5; color: #1C1917; }
   [data-theme="light"] .audit-search:focus,
-  [data-theme="light"] .audit-filter:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,0.12); }
+  [data-theme="light"] .audit-filter:focus { border-color: #7C3AED; box-shadow: 0 0 0 3px rgba(91,33,182,0.12); }
+
+  /* Light mode: logo badge — violet nhạt nền trắng kem, chữ violet đậm */
+  [data-theme="light"] .logo-badge {
+    background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
+    color: #4C1D95;
+    border: 1px solid #C4B5FD;
+  }
+
+  /* Scrollbar light mode */
+  [data-theme="light"] ::-webkit-scrollbar-track { background: #F0EBE1; }
+  [data-theme="light"] ::-webkit-scrollbar-thumb { background: #D6CFC5; border: 2px solid #F0EBE1; border-radius: 10px; }
+  [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #7C3AED; }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { overflow-x: hidden; }
@@ -282,17 +364,17 @@
   }
   .data-table th:last-child { border-right: none; }
   [data-theme="light"] .data-table th {
-    background: linear-gradient(180deg, #e8eef8 0%, #dde5f0 100%) !important;
-    border-bottom: 2px solid var(--accent);
-    border-top: 1px solid #c5d2e4;
-    border-right: 1px solid rgba(2,132,199,0.18);
-    color: #1e3a5f !important;
-    box-shadow: 0 2px 6px rgba(2,132,199,0.08);
+    background: linear-gradient(180deg, #EDE8DF 0%, #E4DDD2 100%) !important;
+    border-bottom: 2px solid #C4B5FD;
+    border-top: 1px solid #D6CFC5;
+    border-right: 1px solid rgba(91,33,182,0.12);
+    color: #3A2F28 !important;
+    box-shadow: 0 2px 6px rgba(28,25,23,0.06);
   }
   [data-theme="light"] .data-table th:last-child { border-right: none; }
   .th-inner { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; background: inherit; }
   .th-inner:hover { background: rgba(0,212,255,0.12); color: var(--accent); border-radius: 2px; }
-  [data-theme="light"] .th-inner:hover { background: rgba(2,132,199,0.12); color: #0284c7; }
+  [data-theme="light"] .th-inner:hover { background: rgba(91,33,182,0.10); color: #5B21B6; border-radius: 2px; }
   .td-center { text-align: center !important; }
   .td-left   { text-align: left !important; }
   .sort-icon { color: var(--text-muted); font-size: 10px; }
@@ -633,7 +715,7 @@
   .kk-new-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,212,255,0.1); }
 
   /* ====== QR MODAL ====== */
-  .qr-overlay { display:none; position:fixed; inset:0; z-index:600; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; }
+  .qr-overlay { display:none; position:fixed; inset:0; z-index:1300; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; }
   .qr-overlay.open { display:flex; }
   .qr-modal { background:var(--bg-panel); border:1px solid var(--border-light); border-radius:12px; width:340px; max-width:95vw; box-shadow:var(--shadow); animation:modalIn 0.2s ease; overflow:hidden; }
   .qr-header { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
@@ -853,6 +935,32 @@
   .th-cb-check { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
   tr.row-selected td { background: rgba(0,212,255,0.1) !important; }
 
+  /* ── Inline cell edit ── */
+  .inline-edit-input {
+    width: 100%; min-width: 80px;
+    background: var(--bg-base);
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 12px;
+    padding: 3px 7px;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.18);
+  }
+  [data-theme="light"] .inline-edit-input {
+    background: #fff;
+    border-color: #7C3AED;
+    color: #1C1917;
+    box-shadow: 0 0 0 3px rgba(91,33,182,0.14);
+  }
+  .data-table tbody td:not(.td-cb):not(.td-id):not(.td-stt) { position: relative; cursor: pointer; }
+  .data-table tbody td:not(.td-cb):not(.td-id):not(.td-stt):hover::after {
+    content: '✎';
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    font-size: 10px; color: var(--text-muted); opacity: 0.45; pointer-events: none;
+  }
+
 </style>
 </head>
 <body>
@@ -967,10 +1075,7 @@
         <option value="">— Năm phát sinh —</option>
       </select>
       <div class="toolbar-sep desktop-only"></div>
-      <div class="view-tabs">
-        <div class="view-tab active" id="tabTable" onclick="setView('table')">☰ Bảng</div>
-        <div class="view-tab" id="tabCards" onclick="setView('cards')">⊞ Thẻ</div>
-      </div>
+      <button class="toolbar-btn" id="viewToggleBtn" onclick="toggleView()" title="Chuyển chế độ xem" style="font-size:12px;padding:5px 12px;display:flex;align-items:center;gap:5px">⊞ Thẻ</button>
       <button class="toolbar-btn primary collapsible-btn desktop-only" data-priority="1" onclick="openColPanel()">⚙ Cột hiển thị</button>
       <button class="toolbar-btn success-btn collapsible-btn desktop-only" data-priority="2" onclick="openAddNew()" title="Thêm tài sản mới">＋ Thêm mới</button>
       <button class="toolbar-btn toolbar-btn-import collapsible-btn desktop-only" data-priority="3" onclick="openImport()">📂 Import</button>
@@ -1122,7 +1227,10 @@
         <div class="modal-id" id="editModalId"></div>
         <div class="modal-name">✏️ Chỉnh sửa thông tin</div>
       </div>
-      <button class="modal-close" onclick="closeEdit()">✕</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="toolbar-btn" onclick="openQR()" style="font-size:11px;padding:5px 10px">🏷 QR</button>
+        <button class="modal-close" onclick="closeEdit()">✕</button>
+      </div>
     </div>
     <div class="modal-body" id="editFormBody" style="padding:16px;overflow-y:auto;max-height:calc(90vh - 140px)"></div>
     <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
@@ -2379,6 +2487,8 @@ function setFilter(filter, el) {
     document.querySelectorAll('[data-filter]').forEach(e => e.classList.remove('active'));
     el.classList.add('active');
   }
+  // Quick filter và status filter là 2 cách lọc theo trạng thái — xóa status filter khi dùng quick filter
+  if (filter !== 'all') { _statusFilter = ''; updateStats(); }
   applyFiltersWithType();
 }
 
@@ -2424,17 +2534,18 @@ function renderTable() {
       ${deptTd}
       ${visible.map(c => {
         const alignClass = c.align === 'center' ? 'td-center' : 'td-left';
+        const dblclick = `ondblclick="handleCellDblClick(event,${idx},'${c.key}')"`;
         if (c.key === 'A') return `<td class="td-stt ${alignClass}">${escHtml(row.A) || idx+1}</td>`;
         if (c.key === 'B') return `<td class="td-id ${alignClass}">${highlight(cleanVal(row.B), q)}</td>`;
-        if (c.key === 'I') return `<td class="${alignClass}">${statusBadge(row.I)}</td>`;
+        if (c.key === 'I') return `<td class="${alignClass}" ${dblclick}>${statusBadge(row.I)}</td>`;
         if (c.key === 'G') {
           const ageY = getDeviceAgeYears(row);
           const ageBadge = ageY >= 7 ? `<span class="age-badge age-crit">⚠ ${Math.floor(ageY)}năm</span>` : ageY >= 5 ? `<span class="age-badge age-warn">${Math.floor(ageY)}năm</span>` : '';
-          return `<td class="${alignClass}" title="${escHtml(row.G)}">${escHtml(cleanVal(row.G))||'<span style="color:var(--text-muted)">—</span>'}${ageBadge}</td>`;
+          return `<td class="${alignClass}" title="${escHtml(row.G)}" ${dblclick}>${escHtml(cleanVal(row.G))||'<span style="color:var(--text-muted)">—</span>'}${ageBadge}</td>`;
         }
         const rawVal = cleanVal(row[c.key]);
         const val = highlight(rawVal, q);
-        return `<td class="${alignClass}" title="${escHtml(rawVal)}">${val || '<span style="color:var(--text-muted)">—</span>'}</td>`;
+        return `<td class="${alignClass}" title="${escHtml(rawVal)}" ${dblclick}>${val || '<span style="color:var(--text-muted)">—</span>'}</td>`;
       }).join('')}
     </tr>`;
   }).join('');
@@ -2477,7 +2588,7 @@ function deptBadge(deptKey) {
 function statusBadge(val) {
   if (!val) return `<span class="status-badge status-other">—</span>`;
   const v = val.toLowerCase();
-  if (v.includes('hoạt động')) return `<span class="status-badge status-ok">● Hoạt động</span>`;
+  if (v.includes('hoạt động')) return `<span class="status-badge status-ok">● Đang hoạt động</span>`;
   if (v.includes('hỏng') || v.includes('broken')) return `<span class="status-badge status-broken">✕ Hỏng</span>`;
   if (v.includes('không tìm') || v.includes('mất') || v.includes('chưa thấy')) return `<span class="status-badge status-lost">? Không tìm thấy</span>`;
   if (v.includes('thanh lý')) return `<span class="status-badge status-retired">◈ Đã thanh lý</span>`;
@@ -2623,7 +2734,7 @@ const EDIT_GROUPS = [
     { key:'F', label:'Serial',        type:'text' },
     { key:'G', label:'Ngày sử dụng',  type:'text', hint:'DD/MM/YYYY' },
     { key:'H', label:'SL',            type:'text' },
-    { key:'I', label:'Hiện trạng',    type:'select', options:['Hoạt động tốt','Hỏng','Không tìm thấy','Chưa xác định','Đã thanh lý','Đã bàn giao trả'] },
+    { key:'I', label:'Hiện trạng',    type:'select', options:['Đang hoạt động','Hỏng','Không tìm thấy','Đã thanh lý','Đã bàn giao trả','Chưa xác định'] },
     { key:'J', label:'Người quản lý', type:'text' },
     { key:'K', label:'Vị trí',        type:'text' },
     { key:'L', label:'Ghi chú',       type:'textarea' },
@@ -2821,7 +2932,7 @@ function openAddNew() {
   const TEXTAREA_KEYS = new Set(['L', 'AA', 'AC', 'AD', 'Y', 'AE', 'AF']);
   const REQUIRED_KEYS = new Set(['D']);
   const FIXED_SELECT  = {
-    'I': ['Hoạt động tốt', 'Hỏng', 'Không tìm thấy', 'Chưa xác định', 'Đã thanh lý', 'Đã bàn giao trả']
+    'I': ['Đang hoạt động', 'Hỏng', 'Không tìm thấy', 'Đã thanh lý', 'Đã bàn giao trả', 'Chưa xác định']
   };
   const nameList   = [...new Set(allData.map(r => r.D).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
   const DYNAMIC_SELECT = { 'D': nameList, 'E': brandList, 'J': peopleList };
@@ -3279,7 +3390,13 @@ let _tagFilter = '';
 
 function filterByStatus(val) {
   _statusFilter = (_statusFilter === val) ? '' : val;
-  updateStats(); // re-render để cập nhật active state
+  // Reset quick filter về all khi dùng status filter từ sidebar
+  if (_statusFilter) {
+    quickFilter = 'all';
+    document.querySelectorAll('[data-filter]').forEach(e => e.classList.remove('active'));
+    document.querySelector('[data-filter="all"]')?.classList.add('active');
+  }
+  updateStats();
   applyFiltersWithType();
 }
 function filterByTag(tag) {
@@ -3444,10 +3561,14 @@ function setView(v) {
   currentView = v;
   document.getElementById('tableView').style.display = v==='table' ? '' : 'none';
   document.getElementById('cardsView').style.display = v==='cards' ? '' : 'none';
-  document.getElementById('tabTable').classList.toggle('active', v==='table');
-  document.getElementById('tabCards').classList.toggle('active', v==='cards');
+  // Nút toggle hiện label của view còn lại (để switch sang)
+  const btn = document.getElementById('viewToggleBtn');
+  if (btn) btn.innerHTML = v==='table' ? '⊞ Thẻ' : '☰ Bảng';
   if (v==='table') renderTable(); else renderCards();
   pushURLState();
+}
+function toggleView() {
+  setView(currentView === 'table' ? 'cards' : 'table');
 }
 
 // ====== EXPORT CSV ======
@@ -3819,10 +3940,132 @@ function renderAuditTable() {
 // ====== BULK SELECT ======
 let _bulkSelected = new Set(); // Set of _sheetRow values
 
+let _rowClickTimer = null;
+
 function handleRowClick(e, idx) {
-  // If click is on checkbox area, don't open detail
   if (e.target.type === 'checkbox') return;
-  openDetail(idx);
+  if (e.target.closest('.inline-edit-input')) return;
+  if (e.detail >= 2) return;
+  clearTimeout(_rowClickTimer);
+  _rowClickTimer = setTimeout(() => {
+    if (_aggregateMode) { openDetail(idx); return; }
+    _detailRow = filteredData[idx];
+    openEdit();
+  }, 350); // 350ms — đủ để dblclick cancel kịp
+}
+
+const INLINE_READONLY = new Set(['A','B']);
+const INLINE_STATUS_OPTS = [
+  'Đang hoạt động','Hỏng','Không tìm thấy','Đã thanh lý','Đã bàn giao trả','Chưa xác định'
+];
+
+function handleCellDblClick(e, rowIdx, colKey) {
+  e.stopPropagation();
+  clearTimeout(_rowClickTimer);
+  if (INLINE_READONLY.has(colKey)) return;
+  if (_aggregateMode) return;
+
+  const td = e.currentTarget;
+  if (td.querySelector('.inline-edit-input')) return;
+  const row = filteredData[rowIdx];
+  if (!row) return;
+  const currentVal = cleanVal(row[colKey]) || '';
+  const originalHTML = td.innerHTML;
+
+  const isStatus = colKey === 'I';
+  // Cột có danh sách gợi ý: dùng <datalist> để vừa gõ tự do vừa chọn
+  const dynamicLists = {
+    'D': [...new Set(allData.map(r=>r.D).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+    'E': [...new Set(allData.map(r=>r.E).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+    'J': [...new Set(allData.map(r=>r.J).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+  };
+
+  td.innerHTML = '';
+  let inputEl;
+
+  if (isStatus) {
+    // Normalize giá trị cũ → giá trị chuẩn mới trước khi so sánh
+    const STATUS_NORMALIZE = {
+      'hoạt động tốt':       'Đang hoạt động',
+      'đang hoạt động tốt':  'Đang hoạt động',
+      'hoạt động':           'Đang hoạt động',
+      'ok':                  'Đang hoạt động',
+      'không tìm thấy / mất':'Không tìm thấy',
+      'mất':                 'Không tìm thấy',
+      'thanh lý':            'Đã thanh lý',
+      'bàn giao trả':        'Đã bàn giao trả',
+      'đã bàn giao':         'Đã bàn giao trả',
+    };
+    const normalizedCurrent = STATUS_NORMALIZE[currentVal.toLowerCase()] || currentVal;
+    inputEl = document.createElement('select');
+    const hasStatusMatch = INLINE_STATUS_OPTS.includes(normalizedCurrent);
+    let htmlOpts = `<option value="">— Chọn —</option>`;
+    if (!hasStatusMatch && normalizedCurrent) htmlOpts += `<option value="${normalizedCurrent}" selected>${normalizedCurrent}</option>`;
+    htmlOpts += INLINE_STATUS_OPTS.map(o =>
+      `<option value="${o}"${o===normalizedCurrent?' selected':''}>${o}</option>`
+    ).join('');
+    inputEl.innerHTML = htmlOpts;
+    td.appendChild(inputEl);
+    inputEl.focus();
+  } else if (dynamicLists[colKey]) {
+    // BUG FIX: dùng <select> thay vì <datalist> để hiện đầy đủ danh sách ngay lập tức
+    inputEl = document.createElement('select');
+    const list = dynamicLists[colKey];
+    const hasListMatch = list.includes(currentVal);
+    let htmlOpts = `<option value="">— Chọn —</option>`;
+    if (!hasListMatch && currentVal) htmlOpts += `<option value="${currentVal}" selected>${currentVal}</option>`;
+    list.forEach(o => { htmlOpts += `<option value="${o}"${o===currentVal?' selected':''}>${o}</option>`; });
+    inputEl.innerHTML = htmlOpts;
+    td.appendChild(inputEl);
+    inputEl.focus();
+  } else {
+    inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    inputEl.value = currentVal;
+    td.appendChild(inputEl);
+    inputEl.focus(); inputEl.select();
+  }
+  inputEl.className = 'inline-edit-input';
+
+  let committed = false;
+  const _compareVal = isStatus ? (typeof normalizedCurrent !== 'undefined' ? normalizedCurrent : currentVal) : currentVal;
+  const commit = async () => {
+    if (committed) return;
+    committed = true;
+    const newVal = inputEl.value.trim();
+    // blank = user không chọn → cancel, không lưu
+    if (!newVal) { td.innerHTML = originalHTML; return; }
+    if (newVal === _compareVal) { applyFiltersWithType(); return; }
+    row[colKey] = newVal;
+    const globalRow = allData.find(r => r.B === row.B);
+    if (globalRow) globalRow[colKey] = newVal;
+    applyFiltersWithType();
+    if (APPS_SCRIPT_URL && row._sheetRow) {
+      const def = COL_DEFS.find(c => c.key === colKey);
+      showToast(`⏳ Đang lưu "${def?.label||colKey}"...`, 'info');
+      try {
+        // BUG FIX: dùng JSONP thay vì fetch POST để tránh CORS với Apps Script
+        await new Promise((resolve, reject) => {
+          const cbName = 'snoc2_inline_' + Date.now();
+          const payload = { secret: EDIT_SECRET, sheetRow: row._sheetRow, assetId: row.B, updates: {[colKey]: newVal}, editor: 'inline-'+(_activeDept||'noc') };
+          const url = APPS_SCRIPT_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+          let timer;
+          window[cbName] = function(result) { clearTimeout(timer); delete window[cbName]; if (s.parentNode) s.parentNode.removeChild(s); if (result && result.ok) resolve(result); else reject(new Error(result ? result.error : 'Lỗi GSheets')); };
+          const s = document.createElement('script'); s.src = url;
+          s.onerror = () => { clearTimeout(timer); delete window[cbName]; if (s.parentNode) s.parentNode.removeChild(s); reject(new Error('Không kết nối được')); };
+          timer = setTimeout(() => { delete window[cbName]; if (s.parentNode) s.parentNode.removeChild(s); reject(new Error('Timeout')); }, 15000);
+          document.body.appendChild(s);
+        });
+        showToast(`✅ Đã lưu "${def?.label||colKey}"`, 'success');
+      } catch(err) { showToast('❌ Lỗi lưu: ' + err.message, 'error'); }
+    } else { showToast('✅ Đã cập nhật (local)', 'info'); }
+  };
+  const cancel = () => { if (committed) return; committed = true; td.innerHTML = originalHTML; };
+  inputEl.addEventListener('blur', commit);
+  inputEl.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') { ev.preventDefault(); inputEl.blur(); }
+    if (ev.key === 'Escape') { inputEl.removeEventListener('blur', commit); cancel(); }
+  });
 }
 
 function toggleRowSelect(idx, checked) {
