@@ -440,6 +440,9 @@
   .detail-val { padding: 7px 12px; font-size: 12px; color: var(--text-primary); word-break: break-all; }
   .detail-val.mono { font-family: var(--font-mono); font-size: 11px; }
   .detail-val.empty { color: var(--text-muted); font-style: italic; }
+  .detail-val.editable { cursor: pointer; }
+  .detail-val.editable:hover { background: rgba(0,144,204,0.08); outline: 1px solid var(--accent2); outline-offset: -2px; }
+  .detail-val.editing { padding: 2px 6px; }
 
   /* ====== LOADING ====== */
   .state-center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; gap: 12px; color: var(--text-muted); }
@@ -497,13 +500,6 @@
   @keyframes highlight-pulse { 0% { background:rgba(0,255,157,0.3) !important; } 100% { background:transparent; } }
   .scan-match-badge { display:inline-block; background:var(--accent3); color:#000; font-family:var(--font-mono); font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; margin-left:6px; }
 
-  /* ====== TAGS ====== */
-  .tag-chip { display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:600;background:rgba(0,212,255,0.12);color:var(--accent);border:1px solid rgba(0,212,255,0.3);white-space:nowrap;font-family:var(--font-mono);letter-spacing:0.2px; }
-  .tag-chip .tag-remove { cursor:pointer;opacity:0.55;font-size:9px;line-height:1;padding:0 1px; }
-  .tag-chip .tag-remove:hover { opacity:1;color:var(--danger); }
-  .tag-suggestion { display:inline-flex;align-items:center;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:500;background:var(--bg-card);color:var(--text-muted);border:1px solid var(--border);cursor:pointer;transition:all 0.15s;font-family:var(--font-mono); }
-  .tag-suggestion:hover { border-color:var(--accent2);color:var(--accent);background:rgba(0,144,204,0.1); }
-  [data-theme="light"] .tag-chip { background:rgba(2,132,199,0.1);border-color:rgba(2,132,199,0.35); }
 
   /* ====== EDIT FORM ====== */
   .edit-group { margin-bottom: 20px; }
@@ -1034,11 +1030,6 @@
       <div id="yearStatsTable"></div>
     </div>
 
-    <div class="sidebar-section" id="tagFilterSection" style="padding-bottom:10px;display:none">
-      <div class="sidebar-label">🏷️ Lọc theo nhãn</div>
-      <div id="tagFilterList"></div>
-    </div>
-
     <div class="sidebar-section" style="padding-bottom:14px">
       <div class="sidebar-label">Công cụ</div>
       <div class="nav-item" onclick="openKiemKe()">
@@ -1211,7 +1202,6 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <button class="toolbar-btn" onclick="openQR()" style="font-size:11px;padding:5px 10px">🏷 QR</button>
-        <button class="toolbar-btn primary" id="editBtn" onclick="openEdit()" style="font-size:12px;padding:5px 12px">✏️ Sửa</button>
         <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
     </div>
@@ -1724,11 +1714,12 @@ function parseDeviceInfo(code) {
 }
 
 // Áp dụng kết quả quét vào form thêm mới
-function applySerialScan() {
+// ====== SERIAL SCAN — hàm chung (fix: loại bỏ duplicate ~55 dòng) ======
+// isEditForm=true  → dùng selector #editFormBody [data-key] + [data-editkey-extra]
+// isEditForm=false → dùng selector #addFormBody  [data-addkey] + [data-addkey-extra]
+function _applySerialScanToForm(isEditForm) {
   if (!lastScannedCode) return;
   const info = parseDeviceInfo(lastScannedCode);
-
-  // Map info fields → cột GSheet
   const fieldMap = {
     F: info.serial || lastScannedCode,
     E: info.brand,
@@ -1737,43 +1728,45 @@ function applySerialScan() {
     N: info.ram,
     O: info.hdd,
     S: info.ip,
-    X: info.mac
+    X: info.mac,
   };
+  const formId   = isEditForm ? 'editFormBody' : 'addFormBody';
+  const keyAttr  = isEditForm ? 'data-key'          : 'data-addkey';
+  const extraAttr= isEditForm ? 'data-editkey-extra' : 'data-addkey-extra';
 
   let filledCount = 0;
   Object.entries(fieldMap).forEach(([key, val]) => {
     if (!val) return;
-    // Với dynamic select (D, E): ưu tiên set select, fallback set extra input
-    const selEl  = document.querySelector(`#addFormBody [data-addkey="${key}"]`);
-    const extraEl = document.querySelector(`#addFormBody [data-addkey-extra="${key}"]`);
-    if (selEl) {
-      if (selEl.tagName === 'SELECT') {
-        // Thử match option
-        const opt = [...selEl.options].find(o => o.value.toLowerCase() === val.toLowerCase());
-        if (opt) { selEl.value = opt.value; filledCount++; }
-        else if (extraEl) { extraEl.value = val; filledCount++; }
-        else { selEl.value = ''; if (extraEl) { extraEl.value = val; filledCount++; } }
-      } else if (!selEl.value) {
-        selEl.value = val; filledCount++;
-      } else {
-        filledCount++; // already has value, don't overwrite
-      }
+    const selEl   = document.querySelector(`#${formId} [${keyAttr}="${key}"]`);
+    const extraEl = document.querySelector(`#${formId} [${extraAttr}="${key}"]`);
+    if (!selEl) return;
+    if (selEl.tagName === 'SELECT') {
+      const opt = [...selEl.options].find(o => o.value.toLowerCase() === val.toLowerCase());
+      if (opt) { selEl.value = opt.value; filledCount++; }
+      else if (extraEl) { extraEl.value = val; filledCount++; }
+      else { selEl.value = ''; } // fix: đồng nhất fallback — không drop silently
+    } else if (!isEditForm && selEl.value) {
+      filledCount++; // add form: không ghi đè giá trị đã có
+    } else {
+      selEl.value = val; filledCount++;
     }
   });
 
-  const infoFields = Object.values(info).filter(Boolean).length;
-  if (infoFields > 1) {
-    showToast(`✅ Đã điền ${filledCount} trường từ mã quét`, 'success');
+  if (isEditForm) {
+    showToast(`✅ Đã điền ${filledCount} trường vào form chỉnh sửa`, 'success');
   } else {
-    showToast('✅ Đã điền Serial Number', 'success');
+    const infoFields = Object.values(info).filter(Boolean).length;
+    showToast(infoFields > 1 ? `✅ Đã điền ${filledCount} trường từ mã quét` : '✅ Đã điền Serial Number', 'success');
   }
-
-  // Reset mode và đóng scanner
   _scannerMode = 'search';
   const applyBtn = document.getElementById('scanApplyBtn');
   if (applyBtn) applyBtn.textContent = '🔍 Tìm kiếm ngay';
   closeScanner();
 }
+
+function applySerialScan()     { _applySerialScanToForm(false); }
+function applySerialScanEdit() { _applySerialScanToForm(true);  }
+
 function restartScan() { resetScannerUI(); startScanner(); }
 
 // ====== SERIAL SCAN CHO FORM CHỈNH SỬA ======
@@ -1782,31 +1775,6 @@ function openScannerForEditSerial() {
   document.getElementById('scannerOverlay').classList.add('open');
   resetScannerUI();
   startScanner();
-}
-function applySerialScanEdit() {
-  if (!lastScannedCode) return;
-  const info = parseDeviceInfo(lastScannedCode);
-  const fieldMap = { F: info.serial || lastScannedCode, E: info.brand, D: info.model, M: info.cpu, N: info.ram, O: info.hdd, S: info.ip, X: info.mac };
-  let filledCount = 0;
-  Object.entries(fieldMap).forEach(([key, val]) => {
-    if (!val) return;
-    const selEl  = document.querySelector(`#editFormBody [data-key="${key}"]`);
-    const extraEl = document.querySelector(`#editFormBody [data-editkey-extra="${key}"]`);
-    if (selEl) {
-      if (selEl.tagName === 'SELECT') {
-        const opt = [...selEl.options].find(o => o.value.toLowerCase() === val.toLowerCase());
-        if (opt) { selEl.value = opt.value; filledCount++; }
-        else if (extraEl) { extraEl.value = val; filledCount++; }
-      } else {
-        selEl.value = val; filledCount++;
-      }
-    }
-  });
-  showToast(`✅ Đã điền ${filledCount} trường vào form chỉnh sửa`, 'success');
-  _scannerMode = 'search';
-  const applyBtn = document.getElementById('scanApplyBtn');
-  if (applyBtn) applyBtn.textContent = '🔍 Tìm kiếm ngay';
-  closeScanner();
 }
 function stopScanner() {
   scannerActive = false;
@@ -2271,7 +2239,6 @@ function syncData(silent = false) {
     // FIX: khôi phục giá trị filter trước khi rebuild dropdowns
     updateStats(); buildTypeFilters();
     buildPersonFilter(); buildBrandFilter(); buildYearFilter(); buildYearStats();
-    buildTagFilterSidebar();
     // Khôi phục filter từ URL (chỉ lần đầu load)
     if (!_urlRestored) { restoreFiltersFromURL(); _urlRestored = true; }
     applyFiltersWithType();
@@ -2424,7 +2391,8 @@ function restoreFiltersFromURL() {
 
 // ====== FILTERS ======
 function applyFilters() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
+  // Cập nhật has-value CSS cho các input filter (border highlight)
+  const q = document.getElementById('searchInput').value;
   const personF = document.getElementById('personFilter').value;
   const brandF = document.getElementById('brandFilter').value;
   const yearF = document.getElementById('yearFilter').value;
@@ -2432,49 +2400,9 @@ function applyFilters() {
   document.getElementById('personFilter').classList.toggle('has-value', !!personF);
   document.getElementById('brandFilter').classList.toggle('has-value', !!brandF);
   document.getElementById('yearFilter')?.classList.toggle('has-value', !!yearF);
-
-  filteredData = allData.filter(row => {
-    const status = (row.I || '').toLowerCase();
-    const age = getDeviceAgeYears(row);
-    const isRetired  = status.includes('thanh lý');
-    const isReturned = status.includes('bàn giao trả') || status.includes('bàn giao');
-    const isArchived = isRetired || isReturned;
-    if (quickFilter === 'ok')       { if (!status.includes('hoạt động')) return false; }
-    else if (quickFilter === 'issue')   { if (status.includes('hoạt động') || !row.I || isArchived) return false; }
-    else if (quickFilter === 'lost')    { if (!status.includes('không tìm') && !status.includes('mất') && !status.includes('chưa thấy')) return false; }
-    else if (quickFilter === 'aged')    { if (age < 5 || isArchived) return false; }
-    else if (quickFilter === 'retired') { if (!isArchived) return false; }
-    // Mặc định (all): ẩn thanh lý/bàn giao trả — phải vào filter riêng mới thấy
-    else if (quickFilter === 'all' || !quickFilter) { if (isArchived) return false; }
-    if (personF && row.J !== personF) return false;
-    if (brandF  && row.E !== brandF)  return false;
-    if (yearF) {
-      const p = (row.G||'').split('/');
-      const ry = p.length===3 ? p[2] : (p.length===1 && p[0].length===4 ? p[0] : null);
-      if (ry !== yearF) return false;
-    }
-    if (q) {
-      const fields = [row.A,row.B,row.C,row.D,row.E,row.F,row.I,row.J,row.K,row.S];
-      return fields.some(f => f && f.toLowerCase().includes(q));
-    }
-    return true;
-  });
-
-  if (sortCol) {
-    filteredData.sort((a, b) => {
-      let va = (a[sortCol]||'').toString().trim(), vb = (b[sortCol]||'').toString().trim();
-      if (va==='' && vb!=='') return 1; if (va!=='' && vb==='') return -1; if (va==='' && vb==='') return 0;
-      if (sortCol==='G' || sortCol==='Z') return (parseDate(va) - parseDate(vb)) * sortDir;
-      if (!isNaN(va) && !isNaN(vb)) return (parseFloat(va) - parseFloat(vb)) * sortDir;
-      return va.localeCompare(vb, 'vi') * sortDir;
-    });
-  }
-
-  document.getElementById('recordCount').innerHTML = `<span>${filteredData.length}</span> / ${allData.length} bản ghi`;
-  updateFilterChips();
-  buildYearStats();
-  if (currentView === 'table') renderTable(); else renderCards();
-  pushURLState();
+  // Delegate toàn bộ logic lọc sang applyFiltersWithType để tránh duplicate
+  // và đảm bảo _typeFilter / _statusFilter luôn được áp dụng
+  applyFiltersWithType();
 }
 
 function setFilter(filter, el) {
@@ -2569,7 +2497,6 @@ function renderCards() {
       <div class="card-row"><span class="card-key">Người QL</span><span class="card-val">${highlight(cleanVal(row.J), q)||'—'}</span></div>
       <div class="card-row"><span class="card-key">Vị trí</span><span class="card-val">${highlight(cleanVal(row.K), q)||'—'}</span></div>
       ${ip ? `<div class="card-row"><span class="card-key">IP</span><span class="card-val" style="font-family:var(--font-mono);font-size:10px;color:var(--accent2)">${highlight(ip, q)}</span></div>` : ''}
-      ${(()=>{ const tags=getAssetTags(row.B||''); if(!tags.length) return ''; return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;border-top:1px solid var(--border);padding-top:7px">${tags.map(t=>`<span class="tag-chip" onclick="event.stopPropagation();filterByTag('${escHtml(t).replace(/'/g,"\\'")}')" title="Lọc theo nhãn: ${escHtml(t)}" style="cursor:pointer">${escHtml(t)}</span>`).join('')}</div>`; })()}
     </div>`}).join('');
 }
 
@@ -2609,9 +2536,6 @@ function openDetail(idx) {
   document.getElementById('modalId').textContent = row.B || '—';
   document.getElementById('modalName').textContent = row.D || row.C || 'Chi tiết tài sản';
 
-  // Ẩn/hiện nút Sửa theo mode
-  const editBtn = document.getElementById('editBtn');
-  if (editBtn) editBtn.style.display = _aggregateMode ? 'none' : '';
 
   const groups = [
     { title:'📦 Thông tin cơ bản',   cols:['A','B','C','D','E','F','G','H','I','J','K','L'] },
@@ -2637,23 +2561,17 @@ function openDetail(idx) {
       const def = COL_DEFS.find(c => c.key === k);
       const val = row[k] || '';
       const isMono = ['B','F','Q','R','S','T','U','V','W','X','AB'].includes(k);
+      const isReadonly = ['A','B'].includes(k) || _aggregateMode;
+      const editAttr = isReadonly ? '' : `onclick="handleDetailDblClick(event,'${k}')" title="Nhấn để sửa"`;
+      const editClass = isReadonly ? '' : 'editable';
       html += `<div class="detail-row">
         <div class="detail-key">${def?.label || k}</div>
-        <div class="detail-val ${isMono?'mono':''} ${!val?'empty':''}">${escHtml(val)||'—'}</div>
+        <div class="detail-val ${isMono?'mono':''} ${!val?'empty':''} ${editClass}" data-colkey="${k}" ${editAttr}>${escHtml(val)||'—'}</div>
       </div>`;
     });
     html += `</div>`;
   });
   document.getElementById('modalBody').innerHTML = html;
-  // Hiển thị tags nếu có
-  const tagsHtml = renderTagsInline(row.B || '');
-  if (tagsHtml) {
-    const tagsSection = document.createElement('div');
-    tagsSection.style.cssText = 'padding:10px 20px 4px';
-    tagsSection.innerHTML = `<div style="font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--accent2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">🏷️ NHÃN / TAGS</div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px">${getAssetTags(row.B||'').map(t=>`<span class="tag-chip" onclick="closeModal();filterByTag('${escHtml(t).replace(/'/g,"\\'")}');" title="Lọc theo nhãn: ${escHtml(t)}" style="cursor:pointer">${escHtml(t)}</span>`).join('')}</div>`;
-    document.getElementById('modalBody').prepend(tagsSection);
-  }
   document.getElementById('modalOverlay').classList.add('open');
 }
 function closeModal(e) {
@@ -2661,61 +2579,118 @@ function closeModal(e) {
     document.getElementById('modalOverlay').classList.remove('open');
 }
 
-// ====== TAG SYSTEM ======
-const TAG_STORAGE_KEY = 'snoc2_tags_v1';
-const TAG_SUGGESTIONS = ['đã-bàn-giao','đang-sửa','chờ-thanh-lý','đang-bảo-hành','cần-kiểm-tra','đã-kiểm-kê','mượn-tạm','chờ-cấp-phát'];
-let _editTags = [];
+function handleDetailDblClick(e, colKey) {
+  e.stopPropagation();
+  const div = e.currentTarget;
+  if (div.querySelector('.inline-edit-input')) return;
+  const row = _detailRow;
+  if (!row) return;
 
-function loadAllTags() {
-  try { return JSON.parse(localStorage.getItem(TAG_STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+  const currentVal = row[colKey] || '';
+  const originalHTML = div.innerHTML;
+  const isStatus = colKey === 'I';
+  const dynamicLists = {
+    'D': [...new Set(allData.map(r=>r.D).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+    'E': [...new Set(allData.map(r=>r.E).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+    'J': [...new Set(allData.map(r=>r.J).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+  };
+  const normalizedCurrent = isStatus ? normalizeStatus(currentVal) : currentVal;
+
+  div.innerHTML = '';
+  div.classList.add('editing');
+  let inputEl;
+
+  if (isStatus) {
+    inputEl = document.createElement('select');
+    const hasStatusMatch = INLINE_STATUS_OPTS.includes(normalizedCurrent);
+    let htmlOpts = `<option value="">— Chọn —</option>`;
+    if (!hasStatusMatch && normalizedCurrent) htmlOpts += `<option value="${normalizedCurrent}" selected>${normalizedCurrent}</option>`;
+    htmlOpts += INLINE_STATUS_OPTS.map(o =>
+      `<option value="${o}"${o===normalizedCurrent?' selected':''}>${o}</option>`
+    ).join('');
+    inputEl.innerHTML = htmlOpts;
+    // Hint raw value nếu khác normalizedCurrent
+    if (currentVal && currentVal !== normalizedCurrent) {
+      const hint = document.createElement('div');
+      hint.style.cssText = 'font-size:10px;color:var(--warn);margin-top:4px;line-height:1.4;font-family:var(--font-mono)';
+      hint.innerHTML = `📋 Gốc: <em>${escHtml(currentVal)}</em> — <span style="cursor:pointer;text-decoration:underline" onclick="(function(){const n=document.getElementById('modalBody').querySelector('[data-colkey=L]');if(n){const cur=n.textContent.trim();n.textContent=(cur&&cur!=='—'?cur+' | ':'')+${JSON.stringify(currentVal)};n.classList.remove('empty');}else{alert('Không tìm thấy ô Ghi chú trong modal');}})()">Chép vào Ghi chú</span>`;
+      div.appendChild(hint);
+    }
+  } else if (dynamicLists[colKey]) {
+    inputEl = document.createElement('select');
+    const list = dynamicLists[colKey];
+    const hasListMatch = list.includes(currentVal);
+    let htmlOpts = `<option value="">— Chọn —</option>`;
+    if (!hasListMatch && currentVal) htmlOpts += `<option value="${currentVal}" selected>${currentVal}</option>`;
+    list.forEach(o => { htmlOpts += `<option value="${o}"${o===currentVal?' selected':''}>${o}</option>`; });
+    inputEl.innerHTML = htmlOpts;
+  } else {
+    inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    inputEl.value = currentVal;
+  }
+  inputEl.className = 'inline-edit-input';
+  div.appendChild(inputEl);
+  inputEl.focus();
+  if (inputEl.select) inputEl.select();
+
+  let committed = false;
+  const _compareVal = isStatus ? normalizedCurrent : currentVal;
+
+  const commit = async () => {
+    if (committed) return;
+    committed = true;
+    div.classList.remove('editing');
+    const newVal = inputEl.value.trim();
+    if (!newVal) { div.innerHTML = originalHTML; return; }
+    if (newVal === _compareVal) { div.innerHTML = escHtml(newVal) || '—'; return; }
+    // Cập nhật data
+    row[colKey] = newVal;
+    const globalRow = allData.find(r => r.B === row.B);
+    if (globalRow) globalRow[colKey] = newVal;
+    // Cập nhật hiển thị trong modal ngay
+    div.innerHTML = escHtml(newVal);
+    div.classList.remove('empty');
+    // Cập nhật header modal nếu sửa tên (cột D)
+    if (colKey === 'D') document.getElementById('modalName').textContent = newVal;
+    // Re-render view bên dưới
+    applyFiltersWithType();
+    // Lưu lên GSheets
+    if (APPS_SCRIPT_URL && row._sheetRow) {
+      const def = COL_DEFS.find(c => c.key === colKey);
+      showToast(`⏳ Đang lưu "${def?.label||colKey}"...`, 'info');
+      try {
+        await new Promise((resolve, reject) => {
+          const cbName = 'snoc2_inline_' + Date.now();
+          const payload = { secret: EDIT_SECRET, sheetRow: row._sheetRow, assetId: row.B, updates: {[colKey]: newVal}, editor: 'inline-'+(_activeDept||'noc') };
+          const url = APPS_SCRIPT_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+          let timer;
+          window[cbName] = function(result) { clearTimeout(timer); delete window[cbName]; if (s.parentNode) s.parentNode.removeChild(s); if (result && result.ok) resolve(result); else reject(new Error(result ? result.error : 'Lỗi GSheets')); };
+          const s = document.createElement('script'); s.src = url;
+          s.onerror = () => { clearTimeout(timer); delete window[cbName]; if (s.parentNode) s.parentNode.removeChild(s); reject(new Error('Không kết nối được')); };
+          timer = setTimeout(() => { delete window[cbName]; if (s.parentNode) s.parentNode.removeChild(s); reject(new Error('Timeout')); }, 15000);
+          document.body.appendChild(s);
+        });
+        showToast(`✅ Đã lưu "${def?.label||colKey}"`, 'success');
+      } catch(err) { showToast('❌ Lỗi lưu: ' + err.message, 'error'); }
+    } else { showToast('✅ Đã cập nhật (local)', 'info'); }
+  };
+
+  const cancel = () => {
+    if (committed) return;
+    committed = true;
+    div.classList.remove('editing');
+    div.innerHTML = originalHTML;
+  };
+
+  inputEl.addEventListener('blur', commit);
+  inputEl.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') { ev.preventDefault(); inputEl.blur(); }
+    if (ev.key === 'Escape') { inputEl.removeEventListener('blur', commit); cancel(); }
+  });
 }
-function getAssetTags(assetId) {
-  return loadAllTags()[assetId] || [];
-}
-function saveAssetTags(assetId, tags) {
-  try {
-    const all = loadAllTags();
-    if (!tags || tags.length === 0) delete all[assetId]; else all[assetId] = tags;
-    localStorage.setItem(TAG_STORAGE_KEY, JSON.stringify(all));
-  } catch(e) {}
-}
-function renderTagEditor() {
-  const container = document.getElementById('tagEditorContainer'); if (!container) return;
-  const suggestions = TAG_SUGGESTIONS.filter(s => !_editTags.includes(s));
-  container.innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;margin-bottom:8px;align-items:center">
-      ${_editTags.map(t => `<span class="tag-chip">${escHtml(t)}<span class="tag-remove" onclick="removeEditTag('${escHtml(t)}')">✕</span></span>`).join('')}
-      ${!_editTags.length ? '<span style="color:var(--text-muted);font-size:11px;font-style:italic">Chưa có nhãn nào</span>' : ''}
-    </div>
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
-      <input id="tagInput" class="edit-input" type="text" placeholder="Nhập nhãn mới (vd: đang-sửa)..."
-        style="flex:1;font-size:12px;font-family:var(--font-mono)"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();addEditTag();}">
-      <button type="button" onclick="addEditTag()"
-        style="flex-shrink:0;padding:7px 12px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.4);
-        color:var(--success);border-radius:var(--radius);cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap">+ Thêm</button>
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:5px">
-      ${suggestions.map(s => `<span class="tag-suggestion" onclick="addEditTagVal('${escHtml(s)}')">${escHtml(s)}</span>`).join('')}
-    </div>`;
-}
-function addEditTag() {
-  const input = document.getElementById('tagInput'); if (!input) return;
-  const val = input.value.trim().toLowerCase().replace(/\s+/g,'-');
-  if (!val || _editTags.includes(val)) { input.value = ''; return; }
-  _editTags.push(val); input.value = ''; renderTagEditor();
-}
-function addEditTagVal(val) {
-  if (!_editTags.includes(val)) { _editTags.push(val); renderTagEditor(); }
-}
-function removeEditTag(tag) {
-  _editTags = _editTags.filter(t => t !== tag); renderTagEditor();
-}
-function renderTagsInline(assetId) {
-  const tags = getAssetTags(assetId);
-  if (!tags.length) return '';
-  return `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>`;
-}
+
+
 
 // ====== EDIT ======
 let _editRow = null;
@@ -2780,11 +2755,20 @@ function openEdit() {
     grp.fields.forEach(f => {
       const val = (_editRow[f.key]||'').replace(/"/g,'&quot;'); let input = '';
       if (f.type === 'select') {
-        // Dropdown hiện trạng: chỉ dùng 4 giá trị cố định
+        // Dropdown hiện trạng: normalize fuzzy trước, pre-select đúng
         const currentVal = String(_editRow[f.key]||'').trim();
-        const currentValLower = currentVal.toLowerCase();
-        const opts = f.options.map(o => `<option value="${o}"${o.toLowerCase()===currentValLower?' selected':''}>${o}</option>`).join('');
-        input = `<select class="edit-select" data-key="${f.key}"><option value="">— Chọn —</option>${opts}</select>`;
+        const normalizedVal = normalizeStatus(currentVal);
+        const opts = f.options.map(o => `<option value="${o}"${o===normalizedVal?' selected':''}>${o}</option>`).join('');
+        // Lưu raw value vào biến tạm để hàm copyRawStatusToNote() truy cập
+        window._editRawStatus = (currentVal !== normalizedVal) ? currentVal : '';
+        const hintHtml = (currentVal && currentVal !== normalizedVal)
+          ? `<div style="font-size:10px;color:var(--warn);margin-top:5px;line-height:1.5;font-family:var(--font-mono)">
+               📋 Giá trị gốc: <em>${escHtml(currentVal)}</em><br>
+               <span style="cursor:pointer;text-decoration:underline;color:var(--accent)"
+                 onclick="copyRawStatusToNote()">⬇ Chép vào Ghi chú</span> để lưu vết trước khi chuẩn hóa
+             </div>`
+          : '';
+        input = `<select class="edit-select" data-key="${f.key}"><option value="">— Chọn —</option>${opts}</select>${hintHtml}`;
       } else if (f.type === 'textarea') {
         input = `<textarea class="edit-textarea" data-key="${f.key}" rows="2">${escHtml(_editRow[f.key]||'')}</textarea>`;
       } else if (DATE_EDIT_KEYS.has(f.key)) {
@@ -2826,13 +2810,6 @@ function openEdit() {
     html += `<div class="edit-row"><div class="edit-label" style="color:var(--text-muted)">Mã TS (ID)</div><div class="edit-readonly">${_editRow.B||'—'} · Hàng ${_editRow._sheetRow||'?'}</div></div></div>`;
   });
   document.getElementById('editFormBody').innerHTML = html;
-  // ── Tags ──
-  _editTags = getAssetTags(_editRow.B || '').slice();
-  const tagSection = document.createElement('div');
-  tagSection.className = 'edit-group';
-  tagSection.innerHTML = `<div class="edit-group-title">🏷️ Nhãn / Tags tùy chỉnh</div><div id="tagEditorContainer"></div>`;
-  document.getElementById('editFormBody').appendChild(tagSection);
-  renderTagEditor();
   document.getElementById('saveStatus').textContent = '';
   document.getElementById('editOverlay').classList.add('open');
 }
@@ -2895,7 +2872,6 @@ async function saveEdit() {
     Object.assign(_editRow, updates);
     const globalRow = allData.find(r => r.B === _editRow.B);
     if (globalRow) Object.assign(globalRow, updates);
-    saveAssetTags(_editRow.B, _editTags);
     if (currentView === 'table') renderTable(); else renderCards();
     const savedSheetRow = _editRow._sheetRow; closeEdit(); applyFiltersWithType();
     const updatedIdx = filteredData.findIndex(r => r._sheetRow === savedSheetRow);
@@ -3386,7 +3362,50 @@ function buildTypeFilters() {
 // FIX: filterByType dùng state riêng thay vì gán vào searchInput
 let _typeFilter = '';
 let _statusFilter = '';
-let _tagFilter = '';
+
+// Module-level constant — tránh tạo mới object mỗi lần double-click
+const STATUS_NORMALIZE = {
+  'hoạt động tốt':       'Đang hoạt động',
+  'đang hoạt động tốt':  'Đang hoạt động',
+  'hoạt động':           'Đang hoạt động',
+  'ok':                  'Đang hoạt động',
+  'không tìm thấy / mất':'Không tìm thấy',
+  'mất':                 'Không tìm thấy',
+  'thanh lý':            'Đã thanh lý',
+  'bàn giao trả':        'Đã bàn giao trả',
+  'đã bàn giao':         'Đã bàn giao trả',
+};
+
+// Normalize raw status value (fuzzy) → chuẩn trong INLINE_STATUS_OPTS
+// Dùng chung cho edit form, inline edit table, inline edit modal
+function normalizeStatus(val) {
+  if (!val) return '';
+  const v = val.toLowerCase().trim();
+  // Exact map trước
+  if (STATUS_NORMALIZE[v]) return STATUS_NORMALIZE[v];
+  // Fuzzy fallback — logic giống statusBadge để không bao giờ sai nhau
+  if (v.includes('hoạt động')) return 'Đang hoạt động';
+  if (v.includes('hỏng') || v.includes('broken')) return 'Hỏng';
+  if (v.includes('không tìm') || v.includes('mất') || v.includes('chưa thấy')) return 'Không tìm thấy';
+  if (v.includes('thanh lý')) return 'Đã thanh lý';
+  if (v.includes('bàn giao trả') || v.includes('bàn giao')) return 'Đã bàn giao trả';
+  return val; // không match → giữ nguyên raw
+}
+
+// Chép raw status value vào ô Ghi chú trong edit form (append, không đè)
+function copyRawStatusToNote() {
+  const raw = window._editRawStatus;
+  if (!raw) return;
+  const noteEl = document.querySelector('#editFormBody [data-key="L"]');
+  if (!noteEl) { showToast('Không tìm thấy ô Ghi chú', 'error'); return; }
+  const cur = noteEl.value.trim();
+  noteEl.value = (cur ? cur + ' | ' : '') + raw;
+  noteEl.style.borderColor = 'var(--accent)';
+  noteEl.style.boxShadow = '0 0 0 3px rgba(100,255,218,0.18)';
+  noteEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  setTimeout(() => { noteEl.style.borderColor = ''; noteEl.style.boxShadow = ''; }, 1800);
+  showToast('✅ Đã chép vào Ghi chú (giữ nội dung cũ)', 'success');
+}
 
 function filterByStatus(val) {
   _statusFilter = (_statusFilter === val) ? '' : val;
@@ -3398,34 +3417,6 @@ function filterByStatus(val) {
   }
   updateStats();
   applyFiltersWithType();
-}
-function filterByTag(tag) {
-  _tagFilter = (_tagFilter === tag) ? '' : tag;
-  buildTagFilterSidebar();
-  applyFiltersWithType();
-}
-function buildTagFilterSidebar() {
-  const allTagsMap = {};
-  const tagsData = loadAllTags();
-  // Đếm tag theo những asset đang có trong allData
-  allData.forEach(r => {
-    const tags = tagsData[r.B] || [];
-    tags.forEach(t => { allTagsMap[t] = (allTagsMap[t]||0)+1; });
-  });
-  const section = document.getElementById('tagFilterSection');
-  const list = document.getElementById('tagFilterList');
-  if (!section || !list) return;
-  const entries = Object.entries(allTagsMap).sort((a,b)=>b[1]-a[1]);
-  if (!entries.length) { section.style.display = 'none'; return; }
-  section.style.display = '';
-  list.innerHTML = entries.map(([tag, count]) => {
-    const isActive = _tagFilter === tag;
-    return `<div class="nav-item${isActive?' active':''}" onclick="filterByTag('${escHtml(tag).replace(/'/g,"\\'")}')">
-      <span class="nav-icon">🏷️</span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-mono);font-size:11px">${escHtml(tag)}</span>
-      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">${count}</span>
-    </div>`;
-  }).join('');
 }
 function filterByType(type, el) {
   const isActive = el.classList.contains('active');
@@ -3439,8 +3430,6 @@ function filterByType(type, el) {
   }
   applyFiltersWithType();
 }
-// Override applyFilters để kết hợp type filter
-const _originalApplyFilters = applyFilters;
 function applyFiltersWithType() {
   // Thêm type filter vào logic lọc
   const origSearchVal = document.getElementById('searchInput').value;
@@ -3449,8 +3438,6 @@ function applyFiltersWithType() {
     if (_typeFilter && row.D !== _typeFilter) return false;
     // Status filter chính xác theo cột I
     if (_statusFilter && (row.I||'(Chưa rõ)') !== _statusFilter) return false;
-    // Tag filter
-    if (_tagFilter && !getAssetTags(row.B||'').includes(_tagFilter)) return false;
     const status = (row.I||'').toLowerCase();
     const age = getDeviceAgeYears(row);
     const isRetired  = status.includes('thanh lý');
@@ -3486,7 +3473,17 @@ function applyFiltersWithType() {
     });
   }
   document.getElementById('recordCount').innerHTML = `<span>${filteredData.length}</span> / ${allData.length} bản ghi`;
+  // Sync has-value CSS (fix: applyFilters delegate vào đây nên phải update ở đây)
+  const _q = document.getElementById('searchInput').value;
+  const _pF = document.getElementById('personFilter').value;
+  const _bF = document.getElementById('brandFilter').value;
+  const _yF = document.getElementById('yearFilter').value;
+  document.getElementById('searchInput').classList.toggle('has-value', !!_q);
+  document.getElementById('personFilter').classList.toggle('has-value', !!_pF);
+  document.getElementById('brandFilter').classList.toggle('has-value', !!_bF);
+  document.getElementById('yearFilter')?.classList.toggle('has-value', !!_yF);
   updateFilterChips();
+  buildYearStats(); // Fix: cập nhật sidebar year stats khi filter qua path này
   if (currentView==='table') renderTable(); else renderCards();
   pushURLState();
 }
@@ -3983,20 +3980,10 @@ function handleCellDblClick(e, rowIdx, colKey) {
   td.innerHTML = '';
   let inputEl;
 
+  // Normalize trước khi vào block — để _compareVal dùng được (fix block-scope bug)
+  const normalizedCurrent = isStatus ? normalizeStatus(currentVal) : currentVal;
+
   if (isStatus) {
-    // Normalize giá trị cũ → giá trị chuẩn mới trước khi so sánh
-    const STATUS_NORMALIZE = {
-      'hoạt động tốt':       'Đang hoạt động',
-      'đang hoạt động tốt':  'Đang hoạt động',
-      'hoạt động':           'Đang hoạt động',
-      'ok':                  'Đang hoạt động',
-      'không tìm thấy / mất':'Không tìm thấy',
-      'mất':                 'Không tìm thấy',
-      'thanh lý':            'Đã thanh lý',
-      'bàn giao trả':        'Đã bàn giao trả',
-      'đã bàn giao':         'Đã bàn giao trả',
-    };
-    const normalizedCurrent = STATUS_NORMALIZE[currentVal.toLowerCase()] || currentVal;
     inputEl = document.createElement('select');
     const hasStatusMatch = INLINE_STATUS_OPTS.includes(normalizedCurrent);
     let htmlOpts = `<option value="">— Chọn —</option>`;
@@ -4006,6 +3993,14 @@ function handleCellDblClick(e, rowIdx, colKey) {
     ).join('');
     inputEl.innerHTML = htmlOpts;
     td.appendChild(inputEl);
+    // Hint raw value ngay dưới dropdown nếu khác normalizedCurrent
+    if (currentVal && currentVal !== normalizedCurrent) {
+      const hint = document.createElement('div');
+      hint.style.cssText = 'font-size:9px;color:var(--warn);margin-top:3px;line-height:1.4;white-space:nowrap;font-family:var(--font-mono)';
+      hint.title = 'Giá trị gốc trong sheet: ' + currentVal;
+      hint.textContent = '📋 Gốc: ' + (currentVal.length > 28 ? currentVal.slice(0,28)+'…' : currentVal);
+      td.appendChild(hint);
+    }
     inputEl.focus();
   } else if (dynamicLists[colKey]) {
     // BUG FIX: dùng <select> thay vì <datalist> để hiện đầy đủ danh sách ngay lập tức
@@ -4028,7 +4023,7 @@ function handleCellDblClick(e, rowIdx, colKey) {
   inputEl.className = 'inline-edit-input';
 
   let committed = false;
-  const _compareVal = isStatus ? (typeof normalizedCurrent !== 'undefined' ? normalizedCurrent : currentVal) : currentVal;
+  const _compareVal = isStatus ? normalizedCurrent : currentVal;
   const commit = async () => {
     if (committed) return;
     committed = true;
@@ -4247,7 +4242,6 @@ function updateFilterChips() {
   if (qfLabel)  chips.push({ label:'📋 '+qfLabel, clear:()=>{ document.querySelector('[data-filter="all"]').click(); } });
   if (_typeFilter) chips.push({ label:'🔧 '+_typeFilter, clear:()=>{ _typeFilter=''; document.querySelectorAll('[data-type]').forEach(e=>e.classList.remove('active')); applyFiltersWithType(); } });
   if (_statusFilter) chips.push({ label:'🔵 '+_statusFilter, clear:()=>{ _statusFilter=''; updateStats(); applyFiltersWithType(); } });
-  if (_tagFilter)    chips.push({ label:'🏷️ '+_tagFilter,    clear:()=>{ _tagFilter=''; buildTagFilterSidebar(); applyFiltersWithType(); } });
   if (q)        chips.push({ label:'🔍 "'+(q.length>20?q.slice(0,20)+'…':q)+'"', clear:()=>{ document.getElementById('searchInput').value=''; applyFilters(); } });
   if (personF)  chips.push({ label:'👤 '+personF, clear:()=>{ document.getElementById('personFilter').value=''; applyFilters(); } });
   if (brandF)   chips.push({ label:'🏭 '+brandF,  clear:()=>{ document.getElementById('brandFilter').value='';  applyFilters(); } });
@@ -4268,7 +4262,6 @@ function updateFilterChips() {
     document.getElementById('yearFilter').value = '';
     _typeFilter = ''; document.querySelectorAll('[data-type]').forEach(e=>e.classList.remove('active'));
     _statusFilter = ''; updateStats();
-    _tagFilter = ''; buildTagFilterSidebar();
     quickFilter = 'all';
     document.querySelectorAll('[data-filter]').forEach(e=>e.classList.remove('active'));
     document.querySelector('[data-filter="all"]')?.classList.add('active');
@@ -4383,9 +4376,17 @@ function adaptToolbar() {
   document.getElementById('moreMenuSep1').style.display = 'none';
   document.getElementById('moreMenuSep2').style.display = 'none';
 
-  // Bước 2: Toolbar đã là nowrap → đo trực tiếp scrollWidth vs offsetWidth
+  // Bước 2: Đo tổng width thực tế của các children (fix: overflow:visible khiến scrollWidth không đáng tin)
+  function getChildrenWidth() {
+    const gap = 8; // gap của toolbar
+    return [...toolbar.children].reduce((sum, el) => {
+      if (el.style.display === 'none') return sum;
+      return sum + el.getBoundingClientRect().width + gap;
+    }, 0);
+  }
+
   for (let i = 0; i < btns.length; i++) {
-    if (toolbar.scrollWidth <= toolbar.offsetWidth + 2) break;
+    if (getChildrenWidth() <= toolbar.offsetWidth + 2) break;
     const btn      = btns[i];
     const priority = btn.dataset.priority;
     btn.style.display = 'none';
