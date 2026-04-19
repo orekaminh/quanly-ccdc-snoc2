@@ -43,7 +43,9 @@
   tr.row-ok     { background-color: rgba(0,230,118,0.07) !important; }
   tr.row-broken { background-color: rgba(255,68,68,0.1)  !important; }
   tr.row-lost   { background-color: rgba(255,179,0,0.1)  !important; }
-  tr.row-aged   { background-color: rgba(255,100,0,0.08) !important; }
+  tr.row-aged     { background-color: rgba(255,100,0,0.08) !important; }
+  tr.row-retired  { background-color: rgba(120,80,200,0.07) !important; opacity: 0.75; }
+  tr.row-returned { background-color: rgba(100,160,200,0.07) !important; opacity: 0.75; }
   .data-table tr:hover td { background-color: rgba(0,212,255,0.15) !important; transition: background 0.2s; }
 
   /* ====== LIGHT THEME ====== */
@@ -64,7 +66,9 @@
   [data-theme="light"] .status-ok     { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
   [data-theme="light"] .status-broken { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
   [data-theme="light"] .status-lost   { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-  [data-theme="light"] .status-other  { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+  [data-theme="light"] .status-other    { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+  [data-theme="light"] .status-retired  { background: #ede9fe; color: #7c3aed; border: 1px solid #c4b5fd; }
+  [data-theme="light"] .status-returned { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
   [data-theme="light"] .age-warn      { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
   [data-theme="light"] .age-crit      { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
   [data-theme="light"] .nav-item.active { background: rgba(2,132,199,0.1) !important; box-shadow: inset 3px 0 0 var(--accent), var(--glow); }
@@ -73,6 +77,24 @@
   [data-theme="light"] .toolbar-btn   { background: #f8fafc; border-color: #cbd5e1; color: #374151; }
   [data-theme="light"] .toolbar-btn.primary { background: rgba(2,132,199,0.1); border-color: #0ea5e9; color: #0284c7; }
   [data-theme="light"] .toolbar-btn.success-btn { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.4); color: #059669; }
+  /* Light mode: table hover */
+  [data-theme="light"] .data-table tr:hover td { background-color: rgba(2,132,199,0.07) !important; }
+  [data-theme="light"] .data-table tbody tr:nth-child(even) td { background: #f1f5f9; }
+  [data-theme="light"] .data-table tbody tr:nth-child(even):hover td { background-color: rgba(2,132,199,0.07) !important; }
+  /* Light mode: row status colors (tăng độ tương phản) */
+  [data-theme="light"] tr.row-ok     { background-color: rgba(5,150,105,0.08) !important; }
+  [data-theme="light"] tr.row-broken { background-color: rgba(220,38,38,0.08) !important; }
+  [data-theme="light"] tr.row-lost   { background-color: rgba(217,119,6,0.08) !important; }
+  [data-theme="light"] tr.row-aged   { background-color: rgba(234,88,12,0.07) !important; }
+  [data-theme="light"] tr.row-retired  { background-color: rgba(109,40,217,0.06) !important; opacity: 0.85; }
+  [data-theme="light"] tr.row-returned { background-color: rgba(3,105,161,0.06) !important; opacity: 0.85; }
+  /* Light mode: edit code snippet */
+  [data-theme="light"] .edit-setup-warn code { background: rgba(2,132,199,0.1); color: #0284c7; }
+  /* Light mode: audit inputs */
+  [data-theme="light"] .audit-search,
+  [data-theme="light"] .audit-filter { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+  [data-theme="light"] .audit-search:focus,
+  [data-theme="light"] .audit-filter:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,0.12); }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { overflow-x: hidden; }
@@ -196,6 +218,14 @@
   .toolbar-btn.primary:hover { background: rgba(0,144,204,0.25); }
   .toolbar-btn.success-btn { background: rgba(0,230,118,0.12); border-color: rgba(0,230,118,0.4); color: var(--success); }
   .toolbar-btn.success-btn:hover { background: rgba(0,230,118,0.22); }
+  .toolbar-btn.toolbar-btn-import { background: rgba(160,100,255,0.12); border-color: rgba(160,100,255,0.5); color: #b47fff; }
+  .toolbar-btn.toolbar-btn-import:hover { background: rgba(160,100,255,0.22); }
+  .toolbar-btn.toolbar-btn-audit { background: rgba(255,179,0,0.08); border-color: rgba(255,179,0,0.35); color: var(--warn); }
+  .toolbar-btn.toolbar-btn-audit:hover { background: rgba(255,179,0,0.18); }
+  [data-theme="light"] .toolbar-btn.toolbar-btn-import { background: rgba(124,58,237,0.07); border-color: rgba(124,58,237,0.3); color: #7c3aed; }
+  [data-theme="light"] .toolbar-btn.toolbar-btn-import:hover { background: rgba(124,58,237,0.14); }
+  [data-theme="light"] .toolbar-btn.toolbar-btn-audit { background: rgba(217,119,6,0.07); border-color: rgba(217,119,6,0.3); color: #d97706; }
+  [data-theme="light"] .toolbar-btn.toolbar-btn-audit:hover { background: rgba(217,119,6,0.14); }
   .toolbar-sep { width: 1px; height: 24px; background: var(--border); }
   .record-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; margin-left: auto; }
   .record-count span { color: var(--accent); }
@@ -224,7 +254,9 @@
   .status-ok     { background: rgba(0,230,118,0.12); color: var(--success); border: 1px solid rgba(0,230,118,0.2); }
   .status-broken { background: rgba(255,68,68,0.12);  color: var(--danger);  border: 1px solid rgba(255,68,68,0.2);  }
   .status-lost   { background: rgba(255,179,0,0.12);  color: var(--warn);    border: 1px solid rgba(255,179,0,0.2);  }
-  .status-other  { background: rgba(122,139,170,0.1); color: var(--text-secondary); border: 1px solid var(--border); }
+  .status-other    { background: rgba(122,139,170,0.1); color: var(--text-secondary); border: 1px solid var(--border); }
+  .status-retired  { background: rgba(120,80,200,0.12); color: #a78bfa; border: 1px solid rgba(120,80,200,0.3); }
+  .status-returned { background: rgba(100,160,200,0.12); color: #7ec8e3; border: 1px solid rgba(100,160,200,0.3); }
 
   /* Age warning badge */
   .age-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 700; margin-left: 4px; }
@@ -414,6 +446,16 @@
     .dept-selector-title {
         font-size: 18px;
     }
+    /* Bulk bar mobile */
+    .bulk-bar { padding: 8px 10px; gap: 6px; }
+    .bulk-count { font-size: 11px; }
+    .bulk-count span { font-size: 15px; }
+    .bulk-field-select,
+    .bulk-status-select,
+    .bulk-value-input { min-width: 0; width: 100%; font-size: 12px; padding: 7px 8px; }
+    .bulk-bar > * { flex-shrink: 1; min-width: 0; }
+    .bulk-apply-btn, .bulk-cancel-btn { padding: 7px 10px; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+    .bulk-value-wrap { width: 100%; }
     .mobile-menu-btn { display:flex; }
     .header-sub,.header-divider,.last-sync,.sync-dot { display:none; }
     .header .toolbar-btn, .header .sync-btn { display:none; }
@@ -687,6 +729,64 @@
   .audit-empty { text-align:center; padding:48px; color:var(--text-muted); font-family:var(--font-mono); font-size:12px; }
   .audit-loading { text-align:center; padding:40px; color:var(--text-muted); font-family:var(--font-mono); }
   .audit-count { font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-left:auto; white-space:nowrap; }
+
+  /* ====== BULK ACTION ====== */
+  .bulk-bar {
+    display: none; position: sticky; bottom: 0; z-index: 80;
+    background: var(--bg-panel); border-top: 2px solid var(--accent2);
+    padding: 10px 16px; align-items: center; gap: 10px; flex-wrap: wrap;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+    animation: slideUpBar 0.2s ease;
+  }
+  @keyframes slideUpBar { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+  .bulk-bar.visible { display: flex; }
+  .bulk-count { font-family: var(--font-mono); font-size: 12px; color: var(--accent); font-weight: 700; white-space: nowrap; }
+  .bulk-count span { font-size: 18px; }
+  .bulk-sep { width:1px; height:24px; background:var(--border); }
+  .bulk-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+  .bulk-status-select {
+    background: var(--input-bg); border: 1px solid var(--accent2);
+    color: var(--text-primary); font-size: 12px; padding: 7px 12px;
+    border-radius: var(--radius); outline: none; cursor: pointer; min-width: 180px;
+  }
+  .bulk-status-select:focus { border-color: var(--accent); }
+  .bulk-apply-btn {
+    background: rgba(0,230,118,0.15); border: 1px solid rgba(0,230,118,0.4);
+    color: var(--success); font-size: 12px; font-weight: 700;
+    padding: 7px 18px; border-radius: var(--radius); cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .bulk-apply-btn:hover { background: rgba(0,230,118,0.28); }
+  .bulk-apply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .bulk-cancel-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-muted); font-size: 12px;
+    padding: 7px 14px; border-radius: var(--radius); cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .bulk-cancel-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .bulk-progress { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  .bulk-field-select {
+    background: var(--input-bg); border: 1px solid var(--border-light);
+    color: var(--text-primary); font-size: 12px; padding: 7px 12px;
+    border-radius: var(--radius); outline: none; cursor: pointer; min-width: 160px;
+  }
+  .bulk-field-select:focus { border-color: var(--accent); }
+  .bulk-value-wrap { display: flex; align-items: center; gap: 6px; }
+  .bulk-value-input {
+    background: var(--input-bg); border: 1px solid var(--accent2);
+    color: var(--text-primary); font-size: 12px; padding: 7px 10px;
+    border-radius: var(--radius); outline: none; min-width: 180px;
+  }
+  .bulk-value-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.15); }
+
+  /* Checkbox column in table */
+  .th-cb { width: 36px; min-width: 36px; text-align: center !important; padding: 0 !important; }
+  .td-cb { width: 36px; min-width: 36px; text-align: center; padding: 0 6px !important; cursor: default !important; }
+  .row-cb { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
+  .th-cb-check { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
+  tr.row-selected td { background: rgba(0,212,255,0.1) !important; }
+
 </style>
 </head>
 <body>
@@ -747,6 +847,7 @@
       <div class="nav-item" onclick="setFilter('issue',this)" data-filter="issue"><span class="nav-icon">⚠️</span> Có vấn đề</div>
       <div class="nav-item" onclick="setFilter('lost',this)" data-filter="lost"><span class="nav-icon">🔍</span> Không tìm thấy</div>
       <div class="nav-item" onclick="setFilter('aged',this)" data-filter="aged"><span class="nav-icon">⏰</span> Thiết bị cũ (&gt;5 năm)</div>
+      <div class="nav-item" onclick="setFilter('retired',this)" data-filter="retired"><span class="nav-icon">🗃</span> Thanh lý / Bàn giao trả</div>
     </div>
 
     <div class="sidebar-section">
@@ -806,17 +907,17 @@
       </div>
       <button class="toolbar-btn primary desktop-only" onclick="openColPanel()">⚙ Cột hiển thị</button>
       <button class="toolbar-btn success-btn desktop-only" onclick="openAddNew()" title="Thêm tài sản mới">＋ Thêm mới</button>
-      <button class="toolbar-btn desktop-only" onclick="openImport()" title="Import từ Excel/CSV" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">📂 Import</button>
-      <button class="toolbar-btn desktop-only" onclick="exportCSV()" title="Xuất dữ liệu ra CSV" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">⬇ Export</button>
-      <button class="toolbar-btn desktop-only" onclick="openAuditLog()" title="Lịch sử chỉnh sửa" style="background:rgba(255,179,0,0.08);border-color:rgba(255,179,0,0.35);color:var(--warn)">🕓 Lịch sử</button>
+      <button class="toolbar-btn toolbar-btn-import desktop-only" onclick="openImport()" title="Import từ Excel/CSV">📂 Import</button>
+      <button class="toolbar-btn toolbar-btn-import desktop-only" onclick="exportCSV()" title="Xuất dữ liệu ra CSV">⬇ Export</button>
+      <button class="toolbar-btn toolbar-btn-audit desktop-only" onclick="openAuditLog()" title="Lịch sử chỉnh sửa">🕓 Lịch sử</button>
       <!-- Mobile action row -->
       <div class="mobile-toolbar-actions">
         <button class="toolbar-btn" id="mobileFilterBtn" onclick="toggleMobileFilters()">🔽 Lọc</button>
         <button class="toolbar-btn primary" onclick="openColPanel()">⚙ Cột</button>
         <button class="toolbar-btn success-btn" onclick="openAddNew()">＋ Thêm</button>
-        <button class="toolbar-btn" onclick="openImport()" title="Import" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">📂 IMP</button>
-        <button class="toolbar-btn" onclick="exportCSV()" title="Export CSV" style="background:rgba(160,100,255,0.12);border-color:rgba(160,100,255,0.5);color:#b47fff">⬇ EXP</button>
-        <button class="toolbar-btn" onclick="openAuditLog()" style="background:rgba(255,179,0,0.08);border-color:rgba(255,179,0,0.35);color:var(--warn)">🕓</button>
+        <button class="toolbar-btn toolbar-btn-import" onclick="openImport()" title="Import">📂 IMP</button>
+        <button class="toolbar-btn toolbar-btn-import" onclick="exportCSV()" title="Export CSV">⬇ EXP</button>
+        <button class="toolbar-btn toolbar-btn-audit" onclick="openAuditLog()">🕓</button>
         <button class="sync-btn" id="syncBtnMobile" onclick="syncData()"><span>⟳</span> Sync</button>
       </div>
       <div class="record-count" id="recordCount"></div>
@@ -837,6 +938,44 @@
     <div class="filter-chips-bar" id="filterChipsBar">
       <span class="filter-chips-label">🔽 BỘ LỌC:</span>
       <div id="filterChips" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
+    </div>
+
+
+    <!-- Bulk Action Bar -->
+    <div class="bulk-bar" id="bulkBar">
+      <div class="bulk-count"><span id="bulkCountNum">0</span> đã chọn</div>
+      <div class="bulk-sep"></div>
+      <!-- Tầng 1: chọn trường -->
+      <select class="bulk-field-select" id="bulkFieldSelect" onchange="onBulkFieldChange()">
+        <option value="">— Cập nhật trường —</option>
+        <option value="I">📋 Hiện trạng</option>
+        <option value="J">👤 Người quản lý</option>
+        <option value="K">📍 Vị trí</option>
+      </select>
+      <!-- Tầng 2: input tương ứng (ẩn cho đến khi chọn trường) -->
+      <div class="bulk-value-wrap" id="bulkValueWrap" style="display:none">
+        <!-- Hiện trạng: dropdown cố định -->
+        <select class="bulk-value-input" id="bulkStatusInput" style="display:none">
+          <option value="">— Chọn trạng thái —</option>
+          <option value="Hoạt động tốt">✅ Hoạt động tốt</option>
+          <option value="Hỏng">❌ Hỏng</option>
+          <option value="Không tìm thấy">🔍 Không tìm thấy</option>
+          <option value="Chưa xác định">❓ Chưa xác định</option>
+          <option value="Đã thanh lý">◈ Đã thanh lý</option>
+          <option value="Đã bàn giao trả">↩ Đã bàn giao trả</option>
+        </select>
+        <!-- Người quản lý: text + datalist -->
+        <input class="bulk-value-input" id="bulkPersonInput" list="bulkPersonList"
+          placeholder="Nhập hoặc chọn người quản lý..." style="display:none" autocomplete="off">
+        <datalist id="bulkPersonList"></datalist>
+        <!-- Vị trí: text + datalist -->
+        <input class="bulk-value-input" id="bulkLocationInput" list="bulkLocationList"
+          placeholder="Nhập hoặc chọn vị trí..." style="display:none" autocomplete="off">
+        <datalist id="bulkLocationList"></datalist>
+      </div>
+      <button class="bulk-apply-btn" id="bulkApplyBtn" onclick="applyBulk()">⚡ Áp dụng</button>
+      <button class="bulk-cancel-btn" onclick="clearBulkSelection()">✕ Bỏ chọn</button>
+      <span class="bulk-progress" id="bulkProgress"></span>
     </div>
 
     <div class="table-wrap" id="tableView">
@@ -1231,10 +1370,6 @@ function onBarcodeFound(code, format) {
   scannerActive = false;
   if (codeReader && codeReader.stopAsyncDecode) codeReader.stopAsyncDecode();
   const fmtLower = (format||'').toString().toLowerCase().replace(' ','_');
-  if (fmtLower === 'qr_code' && code.includes('/')) {
-    const parts = code.split('/'); const lastPart = parts[parts.length-1].trim();
-    if (lastPart && lastPart.length >= 4 && lastPart.length <= 30 && !/\s/.test(lastPart)) code = lastPart;
-  }
   lastScannedCode = code;
   document.getElementById('scannerViewport').classList.remove('scanning');
   const statusEl = document.getElementById('scannerStatus');
@@ -1248,17 +1383,104 @@ function onBarcodeFound(code, format) {
   const applyBtn = document.getElementById('scanApplyBtn');
   if (applyBtn) applyBtn.textContent = _scannerMode === 'serial' ? '✅ Điền vào form' : '🔍 Tìm kiếm ngay';
   try { navigator.vibrate && navigator.vibrate(80); } catch(e){}
-  const matches = allData.filter(r => Object.values(r).some(v => v && String(v).toLowerCase().includes(code.toLowerCase())));
-  if (matches.length > 0) statusEl.innerHTML += `&nbsp;<span class="scan-match-badge">${matches.length} kết quả</span>`;
-  else statusEl.innerHTML += `&nbsp;<span style="color:var(--warn);font-size:10px">⚠ Không tìm thấy</span>`;
+
+  // Chế độ search: thử parse QR nội bộ (dept/assetId/serial) → tìm khớp ngay
+  if (_scannerMode === 'search') {
+    // ── Tầng 1: QR nội bộ dạng dept/assetId/serial ──
+    // Ví dụ: "NOC/ID013/6CM6200JS8"
+    let internalAssetId = null;
+    const slashParts = code.split('/');
+    if (slashParts.length >= 2 && /^[A-Z]{2,6}$/.test(slashParts[0].trim())) {
+      internalAssetId = slashParts[1].trim();
+    }
+
+    // ── Tầng 2: trích serial từ URL hãng hoặc key=value ──
+    // VD: "https://support.hp.com/...?sn=6CM6200JS8" hoặc "SN:6CM6200JS8 PN:L1234A"
+    let extractedSerial = null;
+    const snPatterns = [
+      /[?&]sn=([A-Za-z0-9\-_]{4,30})/i,
+      /[?&]serial=([A-Za-z0-9\-_]{4,30})/i,
+      /[?&]serialnumber=([A-Za-z0-9\-_]{4,30})/i,
+      /SN[:\s=]+([A-Za-z0-9\-_]{4,30})/i,
+      /S\/N[:\s=]+([A-Za-z0-9\-_]{4,30})/i,
+      /Serial[:\s=]+([A-Za-z0-9\-_]{4,30})/i,
+    ];
+    for (const pat of snPatterns) {
+      const m = code.match(pat);
+      if (m) { extractedSerial = m[1].trim(); break; }
+    }
+
+    // ── Tầng 3: nếu code ngắn gọn (không có / hay http) → có thể là barcode serial thuần ──
+    const isRawSerial = !code.includes('/') && !code.includes('http') && !code.includes(' ') && code.length >= 4 && code.length <= 40;
+
+    // ── Hàm mở detail ──
+    const autoOpenDetail = (row, label) => {
+      const idx = filteredData.findIndex(r => r._sheetRow === row._sheetRow);
+      try { navigator.vibrate && navigator.vibrate([80,40,80]); } catch(e){}
+      statusEl.innerHTML = `✅ ${label}: <strong>${row.B}</strong> — ${row.D||row.C||''}`;
+      setTimeout(() => {
+        closeScanner();
+        if (idx === -1) {
+          document.getElementById('searchInput').value = '';
+          applyFilters();
+          const idx2 = filteredData.findIndex(r => r._sheetRow === row._sheetRow);
+          if (idx2 !== -1) openDetail(idx2);
+        } else {
+          openDetail(idx);
+        }
+      }, 400);
+      document.getElementById('scanAgainBtn').style.display = '';
+      document.getElementById('scanApplyBtn').style.display = 'none';
+    };
+
+    // ── Khớp theo thứ tự ưu tiên ──
+
+    // 1. QR nội bộ → khớp Mã TS (col B)
+    if (internalAssetId) {
+      const match = allData.find(r => r.B && r.B.trim().toUpperCase() === internalAssetId.toUpperCase());
+      if (match) { autoOpenDetail(match, 'QR nội bộ'); return; }
+    }
+
+    // 2. Khớp chính xác Mã TS (col B) — barcode in trực tiếp asset ID
+    const byAssetId = allData.find(r => r.B && r.B.trim().toUpperCase() === code.trim().toUpperCase());
+    if (byAssetId) { autoOpenDetail(byAssetId, 'Mã tài sản'); return; }
+
+    // 3. Serial trích từ URL/key-value của nhãn hãng → khớp col F
+    if (extractedSerial) {
+      const byExtSerial = allData.find(r => r.F && r.F.trim().toUpperCase() === extractedSerial.toUpperCase());
+      if (byExtSerial) { autoOpenDetail(byExtSerial, 'Serial (nhãn hãng)'); return; }
+    }
+
+    // 4. Barcode serial thuần → khớp chính xác col F
+    if (isRawSerial) {
+      const bySerial = allData.find(r => r.F && r.F.trim().toUpperCase() === code.trim().toUpperCase());
+      if (bySerial) { autoOpenDetail(bySerial, 'Serial'); return; }
+    }
+
+    // 5. Không khớp chính xác → tìm gần đúng toàn bộ để hiện badge, người dùng bấm nút tìm
+    const searchCode = internalAssetId || extractedSerial || code;
+    const matches = allData.filter(r => Object.values(r).some(v => v && String(v).toLowerCase().includes(searchCode.toLowerCase())));
+    if (matches.length > 0) statusEl.innerHTML += `&nbsp;<span class="scan-match-badge">${matches.length} kết quả</span>`;
+    else statusEl.innerHTML += `&nbsp;<span style="color:var(--warn);font-size:10px">⚠ Không tìm thấy trong CSDL</span>`;
+  }
 }
 function applyScannedCode() {
   if (!lastScannedCode) return;
   if (_scannerMode === 'serial')     { applySerialScan(); return; }
   if (_scannerMode === 'editserial') { applySerialScanEdit(); return; }
-  document.getElementById('searchInput').value = lastScannedCode;
+  // Tìm term tốt nhất để search fallback
+  let searchTerm = lastScannedCode;
+  const qrParts = lastScannedCode.split('/');
+  if (qrParts.length >= 2 && /^[A-Z]{2,6}$/.test(qrParts[0].trim())) {
+    searchTerm = qrParts[1].trim(); // QR nội bộ: lấy assetId
+  } else {
+    // Thử trích serial từ URL/key-value
+    const snM = lastScannedCode.match(/(?:[?&]sn=|\bSN[:\s=]+|\bS\/N[:\s=]+|\bSerial[:\s=]+)([A-Za-z0-9\-_]{4,30})/i);
+    if (snM) searchTerm = snM[1].trim();
+  }
+  document.getElementById('searchInput').value = searchTerm;
   applyFilters(); closeScanner();
-  showToast(`🔍 Đã tìm kiếm: "${lastScannedCode}"`, 'success');
+  showToast(`🔍 Đã tìm kiếm: "${searchTerm}"`, 'success');
   setTimeout(() => {
     const firstRow = document.querySelector('#tableBody tr');
     if (firstRow) { firstRow.classList.add('barcode-highlight'); firstRow.scrollIntoView({ behavior:'smooth', block:'center' }); setTimeout(() => firstRow.classList.remove('barcode-highlight'), 1600); }
@@ -1602,6 +1824,7 @@ function syncAggregate() {
       if (row) Object.assign(row, _pendingEdits[aid]);
     });
 
+    _bulkSelected.clear(); updateBulkBar();
     applyFilters(); updateStats(); buildTypeFilters();
     buildPersonFilter(); buildBrandFilter(); buildYearFilter(); buildYearStats();
     // Khôi phục filter từ URL (chỉ lần đầu load)
@@ -2009,20 +2232,32 @@ function applyFilters() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   const personF = document.getElementById('personFilter').value;
   const brandF = document.getElementById('brandFilter').value;
+  const yearF = document.getElementById('yearFilter').value;
   document.getElementById('searchInput').classList.toggle('has-value', !!q);
   document.getElementById('personFilter').classList.toggle('has-value', !!personF);
   document.getElementById('brandFilter').classList.toggle('has-value', !!brandF);
+  document.getElementById('yearFilter')?.classList.toggle('has-value', !!yearF);
 
   filteredData = allData.filter(row => {
     const status = (row.I || '').toLowerCase();
     const age = getDeviceAgeYears(row);
-    if (quickFilter === 'ok')     { if (!status.includes('hoạt động')) return false; }
-    else if (quickFilter === 'issue') { if (status.includes('hoạt động') || !row.I) return false; }
-    // FIX: filter 'lost' chỉ check cột I (hiện trạng), không dùng cột K (vị trí)
-    else if (quickFilter === 'lost') { if (!status.includes('không tìm') && !status.includes('mất') && !status.includes('chưa thấy')) return false; }
-    else if (quickFilter === 'aged') { if (age < 5) return false; }
+    const isRetired  = status.includes('thanh lý');
+    const isReturned = status.includes('bàn giao trả') || status.includes('bàn giao');
+    const isArchived = isRetired || isReturned;
+    if (quickFilter === 'ok')       { if (!status.includes('hoạt động')) return false; }
+    else if (quickFilter === 'issue')   { if (status.includes('hoạt động') || !row.I || isArchived) return false; }
+    else if (quickFilter === 'lost')    { if (!status.includes('không tìm') && !status.includes('mất') && !status.includes('chưa thấy')) return false; }
+    else if (quickFilter === 'aged')    { if (age < 5 || isArchived) return false; }
+    else if (quickFilter === 'retired') { if (!isArchived) return false; }
+    // Mặc định (all): ẩn thanh lý/bàn giao trả — phải vào filter riêng mới thấy
+    else if (quickFilter === 'all' || !quickFilter) { if (isArchived) return false; }
     if (personF && row.J !== personF) return false;
     if (brandF  && row.E !== brandF)  return false;
+    if (yearF) {
+      const p = (row.G||'').split('/');
+      const ry = p.length===3 ? p[2] : (p.length===1 && p[0].length===4 ? p[0] : null);
+      if (ry !== yearF) return false;
+    }
     if (q) {
       const fields = [row.A,row.B,row.C,row.D,row.E,row.F,row.I,row.J,row.K,row.S];
       return fields.some(f => f && f.toLowerCase().includes(q));
@@ -2057,7 +2292,7 @@ function setFilter(filter, el) {
     document.querySelectorAll('[data-filter]').forEach(e => e.classList.remove('active'));
     el.classList.add('active');
   }
-  applyFilters();
+  applyFiltersWithType();
 }
 
 // ====== RENDER TABLE ======
@@ -2068,7 +2303,9 @@ function renderTable() {
   const q = document.getElementById('searchInput').value.toLowerCase();
 
   const deptTh = _aggregateMode ? `<th><div class="th-inner">Phòng</div></th>` : '';
+  const allChecked = filteredData.length > 0 && filteredData.every(r => _bulkSelected.has(r._sheetRow));
   head.innerHTML = `<tr>
+   <th class="th-cb"><input type="checkbox" class="th-cb-check" id="bulkCheckAll" ${allChecked?'checked':''} onchange="toggleSelectAll(this.checked)" onclick="event.stopPropagation()"></th>
    ${deptTh}
    ${visible.map(c => `<th class="${sortCol===c.key?'active-sort':''}">
       <div class="th-inner" onclick="sortBy('${c.key}')">${getColLabel(c, COL_DEFS.findIndex(d=>d.key===c.key))}
@@ -2088,12 +2325,16 @@ function renderTable() {
     if (status.includes('hoạt động')) rowClass = 'row-ok';
     else if (status.includes('hỏng') || status.includes('broken')) rowClass = 'row-broken';
     else if (status.includes('không tìm') || status.includes('mất')) rowClass = 'row-lost';
-    if (age >= 7) rowClass = 'row-broken';
+    else if (status.includes('thanh lý')) rowClass = 'row-retired';
+    else if (status.includes('bàn giao trả') || status.includes('bàn giao')) rowClass = 'row-returned';
+    if (age >= 7 && !['row-retired','row-returned'].includes(rowClass)) rowClass = 'row-broken';
     else if (age >= 5 && !rowClass) rowClass = 'row-aged';
 
     const deptTd = _aggregateMode ? `<td class="td-center">${deptBadge(row._dept)}</td>` : '';
 
-    return `<tr class="${rowClass}" onclick="openDetail(${idx})" style="cursor:pointer">
+    const isChecked = _bulkSelected.has(row._sheetRow);
+    return `<tr class="${rowClass}${isChecked?' row-selected':''}" onclick="handleRowClick(event,${idx})" style="cursor:pointer">
+      <td class="td-cb" onclick="event.stopPropagation()"><input type="checkbox" class="row-cb" data-idx="${idx}" ${isChecked?'checked':''} onchange="toggleRowSelect(${idx},this.checked)"></td>
       ${deptTd}
       ${visible.map(c => {
         const alignClass = c.align === 'center' ? 'td-center' : 'td-left';
@@ -2153,6 +2394,8 @@ function statusBadge(val) {
   if (v.includes('hoạt động')) return `<span class="status-badge status-ok">● Hoạt động</span>`;
   if (v.includes('hỏng') || v.includes('broken')) return `<span class="status-badge status-broken">✕ Hỏng</span>`;
   if (v.includes('không tìm') || v.includes('mất') || v.includes('chưa thấy')) return `<span class="status-badge status-lost">? Không tìm thấy</span>`;
+  if (v.includes('thanh lý')) return `<span class="status-badge status-retired">◈ Đã thanh lý</span>`;
+  if (v.includes('bàn giao trả') || v.includes('bàn giao')) return `<span class="status-badge status-returned">↩ Đã bàn giao trả</span>`;
   return `<span class="status-badge status-other">${escHtml(val.length>25?val.slice(0,25)+'…':val)}</span>`;
 }
 
@@ -2294,7 +2537,7 @@ const EDIT_GROUPS = [
     { key:'F', label:'Serial',        type:'text' },
     { key:'G', label:'Ngày sử dụng',  type:'text', hint:'DD/MM/YYYY' },
     { key:'H', label:'SL',            type:'text' },
-    { key:'I', label:'Hiện trạng',    type:'select', options:['Hoạt động tốt','Hỏng','Không tìm thấy','Chưa xác định'] },
+    { key:'I', label:'Hiện trạng',    type:'select', options:['Hoạt động tốt','Hỏng','Không tìm thấy','Chưa xác định','Đã thanh lý','Đã bàn giao trả'] },
     { key:'J', label:'Người quản lý', type:'text' },
     { key:'K', label:'Vị trí',        type:'text' },
     { key:'L', label:'Ghi chú',       type:'textarea' },
@@ -2425,11 +2668,15 @@ async function saveEdit() {
     }
     if (newVal !== oldVal) updates[key] = newVal;
   });
-  // Xử lý ô nhập tự do của dynamic select (ghi đè nếu người dùng nhập tay)
+  // Xử lý ô nhập tự do của dynamic select (chỉ ghi đè nếu dropdown đang trống)
   document.querySelectorAll('#editFormBody [data-editkey-extra]').forEach(el => {
     const key = el.getAttribute('data-editkey-extra');
     const val = el.value.replace(/\r/g,'').trim();
-    if (val) updates[key] = val;
+    if (!val) return;
+    // Chỉ dùng giá trị nhập tay nếu dropdown tương ứng chưa có giá trị được chọn
+    const selectEl = document.querySelector(`#editFormBody [data-key="${key}"]`);
+    const selectHasValue = selectEl && selectEl.tagName === 'SELECT' && selectEl.value !== '';
+    if (!selectHasValue) updates[key] = val;
   });
   if (!Object.keys(updates).length) { showToast('Không có thay đổi nào', 'info'); closeEdit(); return; }
   const saveBtn = document.getElementById('saveBtn'); const statusEl = document.getElementById('saveStatus');
@@ -2453,8 +2700,8 @@ async function saveEdit() {
     if (globalRow) Object.assign(globalRow, updates);
     saveAssetTags(_editRow.B, _editTags);
     if (currentView === 'table') renderTable(); else renderCards();
-    const savedRow = _editRow; closeEdit(); applyFilters();
-    const updatedIdx = filteredData.findIndex(r => r.B === savedRow.B);
+    const savedSheetRow = _editRow._sheetRow; closeEdit(); applyFiltersWithType();
+    const updatedIdx = filteredData.findIndex(r => r._sheetRow === savedSheetRow);
     if (updatedIdx !== -1) openDetail(updatedIdx);
     showToast(`✅ Đã lưu ${Object.keys(updates).length} trường`, 'info');
     setTimeout(() => syncData(true), 10000);
@@ -2488,7 +2735,7 @@ function openAddNew() {
   const TEXTAREA_KEYS = new Set(['L', 'AA', 'AC', 'AD', 'Y', 'AE', 'AF']);
   const REQUIRED_KEYS = new Set(['D']);
   const FIXED_SELECT  = {
-    'I': ['Hoạt động tốt', 'Hỏng', 'Không tìm thấy', 'Chưa xác định']
+    'I': ['Hoạt động tốt', 'Hỏng', 'Không tìm thấy', 'Chưa xác định', 'Đã thanh lý', 'Đã bàn giao trả']
   };
   const nameList   = [...new Set(allData.map(r => r.D).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
   const DYNAMIC_SELECT = { 'D': nameList, 'E': brandList, 'J': peopleList };
@@ -2839,9 +3086,10 @@ function exportKiemKe() {
     const t = isC ? (session.checkedAssets[r.B]?.at || '') : '';
     return `"${i+1}","${r.B||''}","${r.D||''}","${r.E||''}","${r.F||''}","${r.K||''}","${r.I||''}","${t}"`;
   };
+  const deptLabel = _activeDept || 'SNOC2';
   const csv = [
     `"BIÊN BẢN KIỂM KÊ TÀI SẢN - ${session.name}"`,
-    `"Phòng: SNOC2","Người thực hiện: ${session.person||''}","Ngày tạo: ${session.createdAt}"`,
+    `"Phòng: ${deptLabel}","Người thực hiện: ${session.person||''}","Ngày tạo: ${session.createdAt}"`,
     `"Tổng tài sản: ${allData.length}","Đã kiểm: ${checked.length}","Chưa kiểm: ${unchecked.length}"`,
     '', '"=== ĐÃ KIỂM ==="', header,
     ...checked.map((r,i) => toRow(r,i,true)),
@@ -2851,7 +3099,7 @@ function exportKiemKe() {
   const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url;
-  a.download = `KiemKe_SNOC2_${session.name.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `KiemKe_${deptLabel}_${session.name.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.csv`;
   a.click(); URL.revokeObjectURL(url);
   showToast(`✅ Đã xuất biên bản kiểm kê (${allData.length} bản ghi)`, 'success');
 }
@@ -2907,9 +3155,10 @@ function resetDefaultCols() {
 // ====== STATS ======
 function updateStats() {
   document.getElementById('statTotal').textContent = allData.length;
+  const archived = allData.filter(r => r.I && (r.I.toLowerCase().includes('thanh lý') || r.I.toLowerCase().includes('bàn giao trả') || r.I.toLowerCase().includes('bàn giao'))).length;
   const ok = allData.filter(r => r.I && (r.I.toLowerCase().includes('hoạt động') || r.I.toLowerCase() === 'ok')).length;
   document.getElementById('statActive').textContent = ok;
-  document.getElementById('statIssue').textContent = allData.length - ok;
+  document.getElementById('statIssue').textContent = allData.length - archived - ok;
   const statusMap = {};
   allData.forEach(r => { const s = r.I || '(Chưa rõ)'; statusMap[s] = (statusMap[s]||0)+1; });
   const colors = ['#00e676','#ff4444','#ffb300','#00d4ff','#7a8baa'];
@@ -3001,10 +3250,15 @@ function applyFiltersWithType() {
     if (_tagFilter && !getAssetTags(row.B||'').includes(_tagFilter)) return false;
     const status = (row.I||'').toLowerCase();
     const age = getDeviceAgeYears(row);
-    if (quickFilter === 'ok')     { if (!status.includes('hoạt động')) return false; }
-    else if (quickFilter === 'issue') { if (status.includes('hoạt động') || !row.I) return false; }
+    const isRetired  = status.includes('thanh lý');
+    const isReturned = status.includes('bàn giao trả') || status.includes('bàn giao');
+    const isArchived = isRetired || isReturned;
+    if (quickFilter === 'ok')         { if (!status.includes('hoạt động')) return false; }
+    else if (quickFilter === 'issue') { if (status.includes('hoạt động') || !row.I || isArchived) return false; }
     else if (quickFilter === 'lost')  { if (!status.includes('không tìm') && !status.includes('mất') && !status.includes('chưa thấy')) return false; }
-    else if (quickFilter === 'aged')  { if (age < 5) return false; }
+    else if (quickFilter === 'aged')  { if (age < 5 || isArchived) return false; }
+    else if (quickFilter === 'retired') { if (!isArchived) return false; }
+    else if (quickFilter === 'all' || !quickFilter) { if (isArchived) return false; }
     const personF = document.getElementById('personFilter').value;
     const brandF = document.getElementById('brandFilter').value;
     if (personF && row.J !== personF) return false;
@@ -3078,7 +3332,7 @@ function buildYearStats() {
 function selectYearFilter(yr) {
   const sel = document.getElementById('yearFilter');
   sel.value = sel.value === yr ? '' : yr;
-  applyFilters();
+  applyFiltersWithType();
 }
 
 // FIX: buildPersonFilter/buildBrandFilter giữ nguyên giá trị đang chọn
@@ -3475,6 +3729,156 @@ function renderAuditTable() {
   }).join('');
 }
 
+
+// ====== BULK SELECT ======
+let _bulkSelected = new Set(); // Set of _sheetRow values
+
+function handleRowClick(e, idx) {
+  // If click is on checkbox area, don't open detail
+  if (e.target.type === 'checkbox') return;
+  openDetail(idx);
+}
+
+function toggleRowSelect(idx, checked) {
+  const row = filteredData[idx];
+  if (!row) return;
+  if (checked) _bulkSelected.add(row._sheetRow);
+  else _bulkSelected.delete(row._sheetRow);
+  updateBulkBar();
+  // Update row highlight without full re-render
+  const tr = document.querySelectorAll('#tableBody tr')[idx];
+  if (tr) tr.classList.toggle('row-selected', checked);
+  // Update select-all checkbox
+  const allCb = document.getElementById('bulkCheckAll');
+  if (allCb) allCb.checked = filteredData.length > 0 && filteredData.every(r => _bulkSelected.has(r._sheetRow));
+}
+
+function toggleSelectAll(checked) {
+  filteredData.forEach(r => { if (checked) _bulkSelected.add(r._sheetRow); else _bulkSelected.delete(r._sheetRow); });
+  renderTable();
+  updateBulkBar();
+}
+
+function clearBulkSelection() {
+  _bulkSelected.clear();
+  renderTable();
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const count = _bulkSelected.size;
+  const bar = document.getElementById('bulkBar');
+  document.getElementById('bulkCountNum').textContent = count;
+  if (count > 0) bar.classList.add('visible');
+  else { bar.classList.remove('visible'); document.getElementById('bulkProgress').textContent = ''; }
+}
+
+function onBulkFieldChange() {
+  const field = document.getElementById('bulkFieldSelect').value;
+  const wrap = document.getElementById('bulkValueWrap');
+  const statusEl  = document.getElementById('bulkStatusInput');
+  const personEl  = document.getElementById('bulkPersonInput');
+  const locationEl= document.getElementById('bulkLocationInput');
+
+  // Ẩn tất cả input trước
+  [statusEl, personEl, locationEl].forEach(el => { el.style.display = 'none'; el.value = ''; });
+
+  if (!field) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'flex';
+
+  if (field === 'I') {
+    statusEl.style.display = '';
+  } else if (field === 'J') {
+    // Populate datalist từ data hiện tại
+    const persons = [...new Set(allData.map(r => r.J).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
+    document.getElementById('bulkPersonList').innerHTML = persons.map(p => `<option value="${escHtml(p)}">`).join('');
+    personEl.style.display = '';
+    personEl.focus();
+  } else if (field === 'K') {
+    const locs = [...new Set(allData.map(r => r.K).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
+    document.getElementById('bulkLocationList').innerHTML = locs.map(l => `<option value="${escHtml(l)}">`).join('');
+    locationEl.style.display = '';
+    locationEl.focus();
+  }
+}
+
+async function applyBulk() {
+  const field = document.getElementById('bulkFieldSelect').value;
+  if (!field) { showToast('⚠️ Chọn trường cần cập nhật', 'info'); return; }
+
+  let newVal = '';
+  if (field === 'I') newVal = document.getElementById('bulkStatusInput').value;
+  else if (field === 'J') newVal = document.getElementById('bulkPersonInput').value.trim();
+  else if (field === 'K') newVal = document.getElementById('bulkLocationInput').value.trim();
+
+  if (!newVal) { showToast('⚠️ Nhập giá trị cần cập nhật', 'info'); return; }
+  if (!APPS_SCRIPT_URL) { showToast('⚠️ Chưa cấu hình APPS_SCRIPT_URL', 'error'); return; }
+
+  const rows = allData.filter(r => _bulkSelected.has(r._sheetRow));
+  if (!rows.length) return;
+
+  const fieldLabels = { I: 'Hiện trạng', J: 'Người quản lý', K: 'Vị trí' };
+  const btn = document.getElementById('bulkApplyBtn');
+  const prog = document.getElementById('bulkProgress');
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang lưu...';
+
+  const rowsPayload = rows.map(r => ({
+    status: 'update',
+    sheetRow: r._sheetRow,
+    assetId: r.B,
+    colData: { [field]: newVal }
+  }));
+
+  try {
+    await new Promise((resolve, reject) => {
+      const cbName = 'snoc2_bulk_' + Date.now();
+      const payload = {
+        secret: EDIT_SECRET,
+        action: 'importRows',
+        rows: rowsPayload,
+        editor: 'bulk-' + (_activeDept || 'noc')
+      };
+      const url = APPS_SCRIPT_URL + '?callback=' + cbName + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+      let timer;
+      window[cbName] = function(result) {
+        clearTimeout(timer); delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        if (result && result.ok) resolve(result);
+        else reject(new Error(result ? result.error : 'Unknown error'));
+      };
+      const script = document.createElement('script');
+      script.src = url;
+      script.onerror = () => { clearTimeout(timer); delete window[cbName]; reject(new Error('Không kết nối được Apps Script')); };
+      timer = setTimeout(() => { delete window[cbName]; reject(new Error('Timeout')); }, 20000);
+      document.body.appendChild(script);
+    });
+
+    // Cập nhật local data
+    rows.forEach(r => {
+      r[field] = newVal;
+      const gr = allData.find(g => g._sheetRow === r._sheetRow);
+      if (gr) gr[field] = newVal;
+    });
+    const count = rows.length;
+    _bulkSelected.clear();
+    // Reset bulk bar
+    document.getElementById('bulkFieldSelect').value = '';
+    onBulkFieldChange();
+    applyFiltersWithType();
+    updateBulkBar();
+    showToast(`✅ Đã cập nhật ${count} tài sản — ${fieldLabels[field]}: "${newVal}"`, 'success');
+    prog.textContent = '';
+    setTimeout(() => syncData(true), 8000);
+  } catch(err) {
+    showToast('❌ Lỗi: ' + err.message, 'error');
+    prog.textContent = '❌ ' + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚡ Áp dụng';
+  }
+}
+
 // ====== THEME ======
 function toggleTheme() {
   const isLight = document.body.getAttribute('data-theme') === 'light';
@@ -3513,10 +3917,14 @@ function updateFilterChips() {
     document.getElementById('searchInput').value = '';
     document.getElementById('personFilter').value = '';
     document.getElementById('brandFilter').value = '';
+    document.getElementById('yearFilter').value = '';
     _typeFilter = ''; document.querySelectorAll('[data-type]').forEach(e=>e.classList.remove('active'));
     _statusFilter = ''; updateStats();
     _tagFilter = ''; buildTagFilterSidebar();
-    document.querySelector('[data-filter="all"]')?.click();
+    quickFilter = 'all';
+    document.querySelectorAll('[data-filter]').forEach(e=>e.classList.remove('active'));
+    document.querySelector('[data-filter="all"]')?.classList.add('active');
+    applyFiltersWithType();
   });
 }
 
@@ -3534,7 +3942,7 @@ function syncMobileFilter(type) {
   const [desk, mob] = map[type];
   const fromMob = document.getElementById(mob).value;
   document.getElementById(desk).value = fromMob;
-  applyFilters();
+  applyFiltersWithType();
 }
 
 function syncDesktopToMobile() {
@@ -3558,7 +3966,13 @@ function toggleSidebar() {
     const nav = e.target.closest('.nav-item[data-filter], [data-type]');
     if (nav && window.innerWidth <= 768) {
       const sidebar = document.getElementById('sidebar');
-      if (sidebar && sidebar.classList.contains('open')) setTimeout(toggleSidebar, 150);
+      if (sidebar && sidebar.classList.contains('open')) {
+        setTimeout(() => {
+          sidebar.classList.remove('open');
+          document.getElementById('sidebarOverlay').classList.remove('open');
+          document.body.style.overflow = '';
+        }, 150);
+      }
     }
   });
 })();
@@ -3582,10 +3996,13 @@ document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.key === 'F5') { e.preventDefault(); syncData(); }
 });
 
-// Auto cards on mobile
+// Auto cards on mobile — chỉ áp dụng nếu URL không có view param
 (function autoMobileView() {
   if (window.innerWidth <= 768) {
-    window.addEventListener('load', () => { if (typeof setView === 'function') setView('cards'); });
+    window.addEventListener('load', () => {
+      const urlView = new URLSearchParams(location.search).get('view');
+      if (!urlView && typeof setView === 'function') setView('cards');
+    });
   }
 })();
 
@@ -3641,4 +4058,4 @@ window.addEventListener('load', () => {
 </div>
 
 </body>
-</html>
+</html></html>
