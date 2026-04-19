@@ -40,12 +40,12 @@
   .sort-icon { opacity: 0.3; transition: all 0.2s; }
   th.active-sort .sort-icon { opacity: 1; font-weight: bold; }
 
-  tr.row-ok     { background-color: rgba(0,230,118,0.07) !important; }
-  tr.row-broken { background-color: rgba(255,68,68,0.1)  !important; }
-  tr.row-lost   { background-color: rgba(255,179,0,0.1)  !important; }
-  tr.row-aged     { background-color: rgba(255,100,0,0.08) !important; }
-  tr.row-retired  { background-color: rgba(120,80,200,0.07) !important; opacity: 0.75; }
-  tr.row-returned { background-color: rgba(100,160,200,0.07) !important; opacity: 0.75; }
+  tr.row-ok     td { background-color: rgba(0,230,118,0.08) !important; }
+  tr.row-broken td { background-color: rgba(255,68,68,0.10)  !important; }
+  tr.row-lost   td { background-color: rgba(255,179,0,0.10)  !important; }
+  /* row-aged: không tô màu nền — badge △năm cạnh ngày là đủ */
+  tr.row-retired  td { background-color: rgba(120,80,200,0.08) !important; opacity: 0.75; }
+  tr.row-returned td { background-color: rgba(100,160,200,0.08) !important; opacity: 0.75; }
   .data-table tr:hover td { background-color: rgba(0,212,255,0.15) !important; transition: background 0.2s; }
 
   /* ====== LIGHT THEME ====== */
@@ -77,17 +77,29 @@
   [data-theme="light"] .toolbar-btn   { background: #f8fafc; border-color: #cbd5e1; color: #374151; }
   [data-theme="light"] .toolbar-btn.primary { background: rgba(2,132,199,0.1); border-color: #0ea5e9; color: #0284c7; }
   [data-theme="light"] .toolbar-btn.success-btn { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.4); color: #059669; }
-  /* Light mode: table hover */
-  [data-theme="light"] .data-table tr:hover td { background-color: rgba(2,132,199,0.07) !important; }
-  [data-theme="light"] .data-table tbody tr:nth-child(even) td { background: #f1f5f9; }
-  [data-theme="light"] .data-table tbody tr:nth-child(even):hover td { background-color: rgba(2,132,199,0.07) !important; }
-  /* Light mode: row status colors (tăng độ tương phản) */
-  [data-theme="light"] tr.row-ok     { background-color: rgba(5,150,105,0.08) !important; }
-  [data-theme="light"] tr.row-broken { background-color: rgba(220,38,38,0.08) !important; }
-  [data-theme="light"] tr.row-lost   { background-color: rgba(217,119,6,0.08) !important; }
-  [data-theme="light"] tr.row-aged   { background-color: rgba(234,88,12,0.07) !important; }
-  [data-theme="light"] tr.row-retired  { background-color: rgba(109,40,217,0.06) !important; opacity: 0.85; }
-  [data-theme="light"] tr.row-returned { background-color: rgba(3,105,161,0.06) !important; opacity: 0.85; }
+  /* Light mode: table hover — đồng nhất cho cả dòng chẵn lẻ */
+  [data-theme="light"] .data-table tr:hover td { background-color: rgba(2,132,199,0.14) !important; border-bottom-color: rgba(2,132,199,0.2) !important; }
+  [data-theme="light"] .data-table tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+  [data-theme="light"] .data-table tbody tr:nth-child(even) td { background: #f4f7fb; }
+  [data-theme="light"] .data-table tbody tr:nth-child(even):hover td { background-color: rgba(2,132,199,0.14) !important; }
+  /* Light mode: row status colors — set trên td để override nth-child */
+  [data-theme="light"] tr.row-ok     td { background-color: rgba(5,150,105,0.10) !important; }
+  [data-theme="light"] tr.row-broken td { background-color: rgba(220,38,38,0.09) !important; }
+  [data-theme="light"] tr.row-lost   td { background-color: rgba(217,119,6,0.09) !important; }
+  /* row-aged: không tô màu nền ở light mode — badge là đủ */
+  [data-theme="light"] tr.row-retired  td { background-color: rgba(109,40,217,0.07) !important; opacity: 0.85; }
+  [data-theme="light"] tr.row-returned td { background-color: rgba(3,105,161,0.07) !important; opacity: 0.85; }
+  /* Light mode: hover vẫn thắng kể cả khi row có status color */
+  [data-theme="light"] tr.row-ok:hover     td,
+  [data-theme="light"] tr.row-broken:hover td,
+  [data-theme="light"] tr.row-lost:hover   td,
+  [data-theme="light"] tr.row-retired:hover  td,
+  [data-theme="light"] tr.row-returned:hover td { background-color: rgba(2,132,199,0.16) !important; }
+  [data-theme="light"] tr.row-ok:hover     td:first-child,
+  [data-theme="light"] tr.row-broken:hover td:first-child,
+  [data-theme="light"] tr.row-lost:hover   td:first-child,
+  [data-theme="light"] tr.row-retired:hover  td:first-child,
+  [data-theme="light"] tr.row-returned:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
   /* Light mode: edit code snippet */
   [data-theme="light"] .edit-setup-warn code { background: rgba(2,132,199,0.1); color: #0284c7; }
   /* Light mode: audit inputs */
@@ -202,7 +214,7 @@
   .status-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-primary); }
 
   /* ====== TOOLBAR ====== */
-  .toolbar { padding: 12px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .toolbar { padding: 12px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; overflow: visible; }
   .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 340px; }
   .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; pointer-events: none; }
   .search-input { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-primary); font-family: var(--font-mono); font-size: 12px; padding: 7px 10px 7px 32px; border-radius: var(--radius); outline: none; transition: border-color 0.2s; }
@@ -227,6 +239,28 @@
   [data-theme="light"] .toolbar-btn.toolbar-btn-audit { background: rgba(217,119,6,0.07); border-color: rgba(217,119,6,0.3); color: #d97706; }
   [data-theme="light"] .toolbar-btn.toolbar-btn-audit:hover { background: rgba(217,119,6,0.14); }
   .toolbar-sep { width: 1px; height: 24px; background: var(--border); }
+  /* More menu dropdown */
+  .more-menu-wrap { position: relative; }
+  .more-menu-btn { display: flex; align-items: center; gap: 5px; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-secondary); font-family: var(--font-main); font-size: 12px; padding: 7px 11px; border-radius: var(--radius); cursor: pointer; outline: none; transition: all 0.15s; white-space: nowrap; font-weight: 500; }
+  .more-menu-btn:hover, .more-menu-btn.open { border-color: var(--accent2); color: var(--text-primary); background: var(--bg-hover); }
+  .more-menu-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 6px); background: var(--bg-panel); border: 1px solid var(--border-light); border-radius: var(--radius); box-shadow: var(--shadow); z-index: 200; min-width: 160px; padding: 4px; animation: dropIn 0.15s ease; }
+  @keyframes dropIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .more-menu-dropdown.open { display: block; }
+  .more-menu-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text-secondary); transition: all 0.12s; white-space: nowrap; background: none; border: none; width: 100%; text-align: left; font-family: var(--font-main); }
+  .more-menu-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .more-menu-item.item-import { color: #b47fff; }
+  .more-menu-item.item-import:hover { background: rgba(160,100,255,0.1); color: #b47fff; }
+  .more-menu-item.item-audit { color: var(--warn); }
+  .more-menu-item.item-audit:hover { background: rgba(255,179,0,0.08); }
+  .more-menu-sep { height: 1px; background: var(--border); margin: 3px 0; }
+  .more-menu-item.item-success { color: var(--success); }
+  .more-menu-item.item-success:hover { background: rgba(0,230,118,0.08); }
+  [data-theme="light"] .more-menu-item.item-success { color: #059669; }
+  [data-theme="light"] .more-menu-item.item-success:hover { background: rgba(5,150,105,0.07); }
+  [data-theme="light"] .more-menu-item.item-import { color: #7c3aed; }
+  [data-theme="light"] .more-menu-item.item-import:hover { background: rgba(124,58,237,0.07); color: #7c3aed; }
+  [data-theme="light"] .more-menu-item.item-audit { color: #d97706; }
+  [data-theme="light"] .more-menu-item.item-audit:hover { background: rgba(217,119,6,0.07); }
   .record-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; margin-left: auto; }
   .record-count span { color: var(--accent); }
 
@@ -234,9 +268,30 @@
   .table-wrap { flex: 1; overflow: auto; background: var(--bg-base); }
   .data-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
   .data-table thead { position: sticky; top: 0; z-index: 50; }
-  .data-table th { background: var(--bg-panel) !important; border-bottom: 2px solid var(--border); color: var(--text-secondary); position: relative; }
+  .data-table th {
+    background: linear-gradient(180deg, #1a2540 0%, #141c2e 100%) !important;
+    border-bottom: 2px solid var(--accent2);
+    border-top: 1px solid var(--border-light);
+    border-right: 1px solid rgba(0,212,255,0.18);
+    color: #c8d8f0;
+    position: relative;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .data-table th:last-child { border-right: none; }
+  [data-theme="light"] .data-table th {
+    background: linear-gradient(180deg, #e8eef8 0%, #dde5f0 100%) !important;
+    border-bottom: 2px solid var(--accent);
+    border-top: 1px solid #c5d2e4;
+    border-right: 1px solid rgba(2,132,199,0.18);
+    color: #1e3a5f !important;
+    box-shadow: 0 2px 6px rgba(2,132,199,0.08);
+  }
+  [data-theme="light"] .data-table th:last-child { border-right: none; }
   .th-inner { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; background: inherit; }
-  .th-inner:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .th-inner:hover { background: rgba(0,212,255,0.12); color: var(--accent); border-radius: 2px; }
+  [data-theme="light"] .th-inner:hover { background: rgba(2,132,199,0.12); color: #0284c7; }
   .td-center { text-align: center !important; }
   .td-left   { text-align: left !important; }
   .sort-icon { color: var(--text-muted); font-size: 10px; }
@@ -248,7 +303,8 @@
   .td-id { font-family: var(--font-mono); font-size: 11px; color: var(--accent2); font-weight: 600; }
   .td-action { position: sticky; right: 0; z-index: 2; text-align: center; cursor: pointer; color: var(--text-muted); font-size: 14px; min-width: 36px; padding: 7px 6px; background: var(--bg-base); box-shadow: -3px 0 8px rgba(0,0,0,0.18); }
   .td-action:hover { color: var(--accent); background: var(--bg-hover); }
-  .th-action { position: sticky; right: 0; z-index: 52; width: 36px; min-width: 36px; text-align: center; background: var(--bg-panel) !important; box-shadow: -3px 0 8px rgba(0,0,0,0.18); }
+  .th-action { position: sticky; right: 0; z-index: 52; width: 36px; min-width: 36px; text-align: center; background: linear-gradient(180deg, #1a2540 0%, #141c2e 100%) !important; box-shadow: -3px 0 8px rgba(0,0,0,0.18); }
+  [data-theme="light"] .th-action { background: linear-gradient(180deg, #e8eef8 0%, #dde5f0 100%) !important; }
 
   .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.5px; }
   .status-ok     { background: rgba(0,230,118,0.12); color: var(--success); border: 1px solid rgba(0,230,118,0.2); }
@@ -466,7 +522,7 @@
     .sidebar.open { transform:translateX(0); box-shadow:8px 0 40px rgba(0,0,0,0.5); }
     .layout { height:calc(100vh - 52px); }
     .main { width:100%; }
-    .toolbar { padding:8px 10px; gap:6px; flex-wrap:wrap; }
+    .toolbar { padding:8px 10px; gap:6px; flex-wrap:wrap; overflow:visible; }
     .search-wrap { flex:1 1 calc(100% - 48px); max-width:100%; min-width:unset; order:1; }
     .scan-btn { order:1; flex-shrink:0; }
     .search-input { font-size:14px; padding:9px 10px 9px 34px; }
@@ -905,11 +961,24 @@
         <div class="view-tab active" id="tabTable" onclick="setView('table')">☰ Bảng</div>
         <div class="view-tab" id="tabCards" onclick="setView('cards')">⊞ Thẻ</div>
       </div>
-      <button class="toolbar-btn primary desktop-only" onclick="openColPanel()">⚙ Cột hiển thị</button>
-      <button class="toolbar-btn success-btn desktop-only" onclick="openAddNew()" title="Thêm tài sản mới">＋ Thêm mới</button>
-      <button class="toolbar-btn toolbar-btn-import desktop-only" onclick="openImport()" title="Import từ Excel/CSV">📂 Import</button>
-      <button class="toolbar-btn toolbar-btn-import desktop-only" onclick="exportCSV()" title="Xuất dữ liệu ra CSV">⬇ Export</button>
-      <button class="toolbar-btn toolbar-btn-audit desktop-only" onclick="openAuditLog()" title="Lịch sử chỉnh sửa">🕓 Lịch sử</button>
+      <button class="toolbar-btn primary collapsible-btn desktop-only" data-priority="1" onclick="openColPanel()">⚙ Cột hiển thị</button>
+      <button class="toolbar-btn success-btn collapsible-btn desktop-only" data-priority="2" onclick="openAddNew()" title="Thêm tài sản mới">＋ Thêm mới</button>
+      <button class="toolbar-btn toolbar-btn-import collapsible-btn desktop-only" data-priority="3" onclick="openImport()">📂 Import</button>
+      <button class="toolbar-btn toolbar-btn-import collapsible-btn desktop-only" data-priority="4" onclick="exportCSV()">⬇ Export</button>
+      <button class="toolbar-btn toolbar-btn-audit collapsible-btn desktop-only" data-priority="5" onclick="openAuditLog()">🕓 Lịch sử</button>
+      <!-- More menu: chỉ hiện khi không đủ chỗ cho các nút trên -->
+      <div class="more-menu-wrap desktop-only" id="moreMenuWrap" style="display:none">
+        <button class="more-menu-btn" id="moreMenuBtn" onclick="toggleMoreMenu()" title="Thêm tác vụ">⋯ Thêm</button>
+        <div class="more-menu-dropdown" id="moreMenuDropdown">
+          <button class="more-menu-item" data-for-priority="1" style="display:none" onclick="openColPanel();closeMoreMenu()">⚙ Cột hiển thị</button>
+          <button class="more-menu-item item-success" data-for-priority="2" style="display:none" onclick="openAddNew();closeMoreMenu()">＋ Thêm mới</button>
+          <div class="more-menu-sep" id="moreMenuSep1" style="display:none"></div>
+          <button class="more-menu-item item-import" data-for-priority="3" style="display:none" onclick="openImport();closeMoreMenu()">📂 Import Excel / CSV</button>
+          <button class="more-menu-item item-import" data-for-priority="4" style="display:none" onclick="exportCSV();closeMoreMenu()">⬇ Export CSV</button>
+          <div class="more-menu-sep" id="moreMenuSep2" style="display:none"></div>
+          <button class="more-menu-item item-audit" data-for-priority="5" style="display:none" onclick="openAuditLog();closeMoreMenu()">🕓 Lịch sử chỉnh sửa</button>
+        </div>
+      </div>
       <!-- Mobile action row -->
       <div class="mobile-toolbar-actions">
         <button class="toolbar-btn" id="mobileFilterBtn" onclick="toggleMobileFilters()">🔽 Lọc</button>
@@ -995,7 +1064,7 @@
 
     <div class="footer">
       <div class="footer-item"><span>📄</span> <span id="footerSheet">CCDC-TSCD</span></div>
-      <div class="footer-item"><span>🔗</span> Google Sheets</div>
+      <div class="footer-item"><span>🔗</span> <a id="footerSheetLink" href="#" target="_blank" style="color:var(--text-muted);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">Google Sheets</a></div>
       <div class="footer-item" style="margin-left:auto"><span id="footerDataInfo">—</span></div>
     </div>
   </main>
@@ -1745,6 +1814,14 @@ function loadDept(deptKey, fromUserClick) {
   // Cập nhật footer sheet name
   const footerSheet = document.getElementById('footerSheet');
   if (footerSheet) footerSheet.textContent = cfg.label + ' · CCDC-TSCD';
+  // Cập nhật footer Google Sheets link
+  const footerSheetLink = document.getElementById('footerSheetLink');
+  if (footerSheetLink && cfg.sheetId) {
+    footerSheetLink.href = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/edit${cfg.gid ? '#gid=' + cfg.gid : ''}`;
+    footerSheetLink.title = 'Mở Google Sheets';
+  } else if (footerSheetLink) {
+    footerSheetLink.removeAttribute('href');
+  }
 
   // Ẩn/hiện nút Thêm mới tuỳ theo mode
   const addBtn = document.querySelector('.toolbar-btn.success-btn[onclick="openAddNew()"]');
@@ -3315,15 +3392,15 @@ function buildYearStats() {
     <tr onclick="selectYearFilter('${yr}')" style="cursor:pointer;transition:background 0.15s;background:${activeYr===yr?'rgba(0,212,255,0.10)':'transparent'}"
         onmouseover="this.style.background='rgba(0,212,255,0.07)'" onmouseout="this.style.background='${activeYr===yr?'rgba(0,212,255,0.10)':'transparent'}'">
       <td style="padding:5px 6px;font-family:var(--font-mono);font-size:11px;color:${activeYr===yr?'var(--accent)':'var(--text-primary)'};font-weight:${activeYr===yr?700:400}">${yr}</td>
-      <td style="padding:5px 6px;text-align:right;font-family:var(--font-mono);font-size:11px;color:var(--accent)">${d.total}</td>
-      <td style="padding:5px 6px;text-align:right;font-family:var(--font-mono);font-size:11px;color:${d.broken>0?'var(--danger)':'var(--text-muted)'}">${d.broken||'—'}</td>
+      <td style="padding:5px 6px;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--accent)">${d.total}</td>
+      <td style="padding:5px 6px;text-align:center;font-family:var(--font-mono);font-size:11px;color:${d.broken>0?'var(--danger)':'var(--text-muted)'}">${d.broken||'—'}</td>
     </tr>`).join('');
   document.getElementById('yearStatsTable').innerHTML = rows ? `
     <table style="width:100%;border-collapse:collapse">
       <thead><tr style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.5px">
         <th style="text-align:left;padding:4px 6px;font-weight:600">NĂM</th>
-        <th style="text-align:right;padding:4px 6px;font-weight:600">PHÁT SINH</th>
-        <th style="text-align:right;padding:4px 6px;font-weight:600;color:var(--danger)">HƯ HỎNG</th>
+        <th style="text-align:center;padding:4px 6px;font-weight:600">PHÁT SINH</th>
+        <th style="text-align:center;padding:4px 6px;font-weight:600;color:var(--danger)">HƯ HỎNG</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>` : '<div style="color:var(--text-muted);font-size:11px;padding:6px">Chưa có dữ liệu</div>';
@@ -3879,6 +3956,25 @@ async function applyBulk() {
   }
 }
 
+// ====== MORE MENU ======
+function toggleMoreMenu() {
+  const btn = document.getElementById('moreMenuBtn');
+  const dd  = document.getElementById('moreMenuDropdown');
+  const isOpen = dd.classList.contains('open');
+  if (isOpen) { closeMoreMenu(); return; }
+  dd.classList.add('open'); btn.classList.add('open');
+  // Đóng khi click ngoài
+  setTimeout(() => document.addEventListener('click', _moreMenuOutside), 0);
+}
+function closeMoreMenu() {
+  document.getElementById('moreMenuDropdown')?.classList.remove('open');
+  document.getElementById('moreMenuBtn')?.classList.remove('open');
+  document.removeEventListener('click', _moreMenuOutside);
+}
+function _moreMenuOutside(e) {
+  if (!document.getElementById('moreMenuWrap')?.contains(e.target)) closeMoreMenu();
+}
+
 // ====== THEME ======
 function toggleTheme() {
   const isLight = document.body.getAttribute('data-theme') === 'light';
@@ -4014,7 +4110,54 @@ window.addEventListener('load', () => {
   loadPendingEdits(); // khôi phục edits chưa được confirm từ GSheets
   initDept();
   updateKKProgressBadge();
+  initAdaptiveToolbar();
 });
+
+// ====== ADAPTIVE TOOLBAR ======
+// Tự động co các nút vào ⋯ Thêm khi toolbar không đủ chỗ,
+// và mở ra lại khi có đủ chỗ — dựa trên kích thước thực tế, không phải viewport cố định.
+function adaptToolbar() {
+  if (window.innerWidth <= 768) return;
+  const toolbar   = document.querySelector('.toolbar');
+  const moreWrap  = document.getElementById('moreMenuWrap');
+  const btns      = [...document.querySelectorAll('.collapsible-btn')]
+                      .sort((a, b) => parseInt(b.dataset.priority) - parseInt(a.dataset.priority));
+  const menuItems = document.querySelectorAll('[data-for-priority]');
+
+  // Bước 1: Reset — hiện hết nút inline, ẩn hết item trong dropdown, ẩn moreWrap
+  btns.forEach(b => { b.style.display = ''; });
+  menuItems.forEach(i => i.style.display = 'none');
+  moreWrap.style.display = 'none';
+  document.getElementById('moreMenuSep1').style.display = 'none';
+  document.getElementById('moreMenuSep2').style.display = 'none';
+
+  // Bước 2: Toolbar đã là nowrap → đo trực tiếp scrollWidth vs offsetWidth
+  for (let i = 0; i < btns.length; i++) {
+    if (toolbar.scrollWidth <= toolbar.offsetWidth + 2) break;
+    const btn      = btns[i];
+    const priority = btn.dataset.priority;
+    btn.style.display = 'none';
+    const menuItem = document.querySelector(`[data-for-priority="${priority}"]`);
+    if (menuItem) menuItem.style.display = '';
+    moreWrap.style.display = '';
+  }
+
+  // Bước 3: Cập nhật separator trong dropdown
+  const hasPri12 = ['1','2'].some(p => document.querySelector(`[data-for-priority="${p}"]`)?.style.display !== 'none');
+  const hasPri34 = ['3','4'].some(p => document.querySelector(`[data-for-priority="${p}"]`)?.style.display !== 'none');
+  const hasPri5  = document.querySelector('[data-for-priority="5"]')?.style.display !== 'none';
+  document.getElementById('moreMenuSep1').style.display = hasPri12 && (hasPri34 || hasPri5) ? '' : 'none';
+  document.getElementById('moreMenuSep2').style.display = hasPri34 && hasPri5 ? '' : 'none';
+}
+
+function initAdaptiveToolbar() {
+  if (typeof ResizeObserver === 'undefined') return;
+  const toolbar = document.querySelector('.toolbar');
+  if (!toolbar) return;
+  const ro = new ResizeObserver(() => adaptToolbar());
+  ro.observe(toolbar);
+  adaptToolbar();
+}
 </script>
 <!-- Audit Log Overlay -->
 <div class="audit-overlay" id="auditOverlay" onclick="closeAuditOutside(event)">
