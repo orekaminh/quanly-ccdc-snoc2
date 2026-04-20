@@ -1535,7 +1535,9 @@ function startCanvasDecode(video) {
       if (!scannerActive) return;
       if (codes.length > 0) {
         const p1D = ['code_128','code_39','ean_13','ean_8','upc_a','upc_e','itf'];
-        const best = codes.find(c => p1D.includes((c.format||'').toLowerCase())) || codes[0];
+        // Ưu tiên barcode khớp Serial (col F) trong CSDL trước
+        const serialMatch = codes.find(c => allData && allData.some(r => r.F && r.F.trim().toUpperCase() === (c.rawValue||'').trim().toUpperCase()));
+        const best = serialMatch || codes.find(c => p1D.includes((c.format||'').toLowerCase())) || codes[0];
         onBarcodeFound(best.rawValue, best.format);
       } else requestAnimationFrame(tick);
     }).catch(() => { if (scannerActive) requestAnimationFrame(tick); });
@@ -1544,6 +1546,48 @@ function startCanvasDecode(video) {
 }
 function onBarcodeFound(code, format) {
   if (!scannerActive) return;
+
+  // ── Chế độ search: kiểm tra nhanh trước khi dừng scanner ──
+  if (_scannerMode === 'search') {
+    // Nếu code này không khớp bất kỳ Serial/AssetId nào → tiếp tục quét barcode khác
+    const trimCode = code.trim().toUpperCase();
+    const isRawSerial = !code.includes('/') && !code.includes('http') && !code.includes(' ') && code.length >= 4 && code.length <= 40;
+    const quickMatch = allData && allData.some(r =>
+      (r.B && r.B.trim().toUpperCase() === trimCode) ||
+      (r.F && r.F.trim().toUpperCase() === trimCode)
+    );
+    // Nếu không khớp chính xác serial/assetId → tiếp tục quét (bỏ qua code này)
+    if (!quickMatch && isRawSerial && allData && allData.length > 0) {
+      // Gợi ý nhỏ trên status nhưng không dừng
+      const statusEl = document.getElementById('scannerStatus');
+      statusEl.innerHTML = `<span style="animation:spin 1s linear infinite;display:inline-block">⟳</span>&nbsp; Đang tìm mã Barcode... <span style="opacity:0.55;font-size:10px">(bỏ qua: ${code})</span>`;
+      // Tiếp tục quét
+      if (codeReader && codeReader.decodeFromVideoElement) { /* ZXing tự loop */ }
+      else { /* canvas mode: tiếp tục tick bằng cách set lại scannerActive */ }
+      scannerActive = true;
+      const video = document.getElementById('scannerVideo');
+      if (video && !codeReader) {
+        // canvas mode — gọi lại startCanvasDecode
+        const detector = new BarcodeDetector({ formats: ['code_128','code_39','ean_13','ean_8','qr_code','data_matrix','itf','upc_a','upc_e'] });
+        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+        (function tick() {
+          if (!scannerActive || !video.videoWidth) { if (scannerActive) requestAnimationFrame(tick); return; }
+          canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx.drawImage(video, 0, 0);
+          detector.detect(canvas).then(codes => {
+            if (!scannerActive) return;
+            if (codes.length > 0) {
+              const p1D = ['code_128','code_39','ean_13','ean_8','upc_a','upc_e','itf'];
+              const serialMatch = codes.find(c => allData && allData.some(r => r.F && r.F.trim().toUpperCase() === (c.rawValue||'').trim().toUpperCase()));
+              const best = serialMatch || codes.find(c => p1D.includes((c.format||'').toLowerCase())) || codes[0];
+              onBarcodeFound(best.rawValue, best.format);
+            } else requestAnimationFrame(tick);
+          }).catch(() => { if (scannerActive) requestAnimationFrame(tick); });
+        })();
+      }
+      return; // không dừng, không hiện kết quả
+    }
+  }
+
   scannerActive = false;
   if (codeReader && codeReader.stopAsyncDecode) codeReader.stopAsyncDecode();
   const fmtLower = (format||'').toString().toLowerCase().replace(' ','_');
