@@ -28,7 +28,7 @@
     --border: #1e3a5f;
     --border-light: #2a5082;
     --input-bg: #112240;
-    --input-border: #1e3a5f;
+    --input-border: #3d6494;
     --font-mono: 'JetBrains Mono', monospace;
     --font-main: 'Be Vietnam Pro', sans-serif;
     --radius: 6px;
@@ -112,8 +112,9 @@
   [data-theme="light"] .status-other   { background: #F0EBE1; color: #6B5F56; border: 1px solid #D6CFC5; }
   [data-theme="light"] .status-retired { background: #EDE9FE; color: #5B21B6; border: 1px solid #C4B5FD; }
   [data-theme="light"] .status-returned{ background: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
-  [data-theme="light"] .age-warn       { background: #FEF3C7; color: #78350F; border-color: #FCD34D; }
-  [data-theme="light"] .age-crit       { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+  [data-theme="light"] .status-stored   { background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; }
+  [data-theme="light"] .age-warn { background: #FEF3C7; color: #78350F; border-color: #FCD34D; }
+  [data-theme="light"] .age-crit { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
 
   /* ── Navigation ── */
   [data-theme="light"] .nav-item.active {
@@ -299,9 +300,9 @@
   /* ====== TOOLBAR ====== */
   .toolbar { padding: 12px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; overflow: visible; }
   .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 340px; }
-  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; pointer-events: none; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 13px; pointer-events: none; }
   .search-input { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-primary); font-family: var(--font-mono); font-size: 12px; padding: 7px 10px 7px 32px; border-radius: var(--radius); outline: none; transition: border-color 0.2s; }
-  .search-input::placeholder { color: var(--text-muted); opacity: 1; }
+  .search-input::placeholder { color: var(--text-secondary); opacity: 1; }
   .search-input:hover, .filter-select:hover { border-color: var(--accent2) !important; background: var(--bg-hover); }
   .search-input:focus, .filter-select:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.15) !important; outline: none; }
   .filter-select, .toolbar-btn { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-primary); font-family: var(--font-main); font-size: 12px; padding: 7px 10px; border-radius: var(--radius); cursor: pointer; outline: none; transition: all 0.15s; }
@@ -396,11 +397,14 @@
   .status-other    { background: rgba(122,139,170,0.1); color: var(--text-secondary); border: 1px solid var(--border); }
   .status-retired  { background: rgba(120,80,200,0.12); color: #a78bfa; border: 1px solid rgba(120,80,200,0.3); }
   .status-returned { background: rgba(100,160,200,0.12); color: #7ec8e3; border: 1px solid rgba(100,160,200,0.3); }
+  .status-stored   { background: rgba(100,180,120,0.10); color: #6ee7b7; border: 1px solid rgba(100,180,120,0.25); }
 
   /* Age warning badge */
-  .age-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 700; margin-left: 4px; }
-  .age-warn  { background: rgba(255,179,0,0.15); color: var(--warn); border: 1px solid rgba(255,179,0,0.3); }
-  .age-crit  { background: rgba(255,68,68,0.15);  color: var(--danger); border: 1px solid rgba(255,68,68,0.3); }
+  .age-badge { display: inline-flex; align-items: center; gap: 2px; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600; letter-spacing: 0.2px; }
+  .age-warn  { background: rgba(255,179,0,0.12); color: var(--warn); border: 1px solid rgba(255,179,0,0.25); }
+  .age-crit  { background: rgba(255,68,68,0.12);  color: var(--danger); border: 1px solid rgba(255,68,68,0.25); }
+  .td-date-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.3; }
+  .td-date-val  { white-space: nowrap; }
 
   /* ====== COLUMN PANEL ====== */
   .col-panel-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); }
@@ -1137,7 +1141,7 @@
           <option value="Hoạt động tốt">✅ Hoạt động tốt</option>
           <option value="Hỏng">❌ Hỏng</option>
           <option value="Không tìm thấy">🔍 Không tìm thấy</option>
-          <option value="Chưa xác định">❓ Chưa xác định</option>
+          <option value="Lưu kho">📦 Lưu kho</option>
           <option value="Đã thanh lý">◈ Đã thanh lý</option>
           <option value="Đã bàn giao trả">↩ Đã bàn giao trả</option>
         </select>
@@ -2513,8 +2517,9 @@ function renderTable() {
         if (c.key === 'I') return `<td class="${alignClass}" ${dblclick}>${statusBadge(row.I)}</td>`;
         if (c.key === 'G') {
           const ageY = getDeviceAgeYears(row);
-          const ageBadge = ageY >= 7 ? `<span class="age-badge age-crit">⚠ ${Math.floor(ageY)}năm</span>` : ageY >= 5 ? `<span class="age-badge age-warn">${Math.floor(ageY)}năm</span>` : '';
-          return `<td class="${alignClass}" title="${escHtml(row.G)}" ${dblclick}>${escHtml(cleanVal(row.G))||'<span style="color:var(--text-muted)">—</span>'}${ageBadge}</td>`;
+          const ageBadge = ageY >= 7 ? `<span class="age-badge age-crit">⚠ ${Math.floor(ageY)}năm</span>` : ageY >= 5 ? `<span class="age-badge age-warn">&#9651;${Math.floor(ageY)}năm</span>` : '';
+          const dateVal = escHtml(cleanVal(row.G)) || '<span style="color:var(--text-muted)">—</span>';
+          return `<td class="${alignClass}" title="${escHtml(row.G)}" ${dblclick}><div class="td-date-wrap"><span class="td-date-val">${dateVal}</span>${ageBadge}</div></td>`;
         }
         const rawVal = cleanVal(row[c.key]);
         const val = highlight(rawVal, q);
@@ -2565,6 +2570,7 @@ function statusBadge(val) {
   if (v.includes('không tìm') || v.includes('mất') || v.includes('chưa thấy')) return `<span class="status-badge status-lost">? Không tìm thấy</span>`;
   if (v.includes('thanh lý')) return `<span class="status-badge status-retired">◈ Đã thanh lý</span>`;
   if (v.includes('bàn giao trả') || v.includes('bàn giao')) return `<span class="status-badge status-returned">↩ Đã bàn giao trả</span>`;
+  if (v.includes('lưu kho')) return `<span class="status-badge status-stored">📦 Lưu kho</span>`;
   return `<span class="status-badge status-other">${escHtml(val.length>25?val.slice(0,25)+'…':val)}</span>`;
 }
 
@@ -2754,7 +2760,7 @@ const EDIT_GROUPS = [
     { key:'F', label:'Serial',        type:'text' },
     { key:'G', label:'Ngày sử dụng',  type:'text', hint:'DD/MM/YYYY' },
     { key:'H', label:'SL',            type:'text' },
-    { key:'I', label:'Hiện trạng',    type:'select', options:['Đang hoạt động','Hỏng','Không tìm thấy','Đã thanh lý','Đã bàn giao trả','Chưa xác định'] },
+    { key:'I', label:'Hiện trạng',    type:'select', options:['Đang hoạt động','Hỏng','Không tìm thấy','Đã thanh lý','Đã bàn giao trả','Lưu kho'] },
     { key:'J', label:'Người quản lý', type:'text' },
     { key:'K', label:'Vị trí',        type:'text' },
     { key:'L', label:'Ghi chú',       type:'textarea' },
@@ -2951,7 +2957,7 @@ function openAddNew() {
   const TEXTAREA_KEYS = new Set(['L', 'AA', 'AC', 'AD', 'Y', 'AE', 'AF']);
   const REQUIRED_KEYS = new Set(['D']);
   const FIXED_SELECT  = {
-    'I': ['Đang hoạt động', 'Hỏng', 'Không tìm thấy', 'Đã thanh lý', 'Đã bàn giao trả', 'Chưa xác định']
+    'I': ['Đang hoạt động', 'Hỏng', 'Không tìm thấy', 'Đã thanh lý', 'Đã bàn giao trả', 'Lưu kho']
   };
   const nameList   = [...new Set(allData.map(r => r.D).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
   const DYNAMIC_SELECT = { 'D': nameList, 'E': brandList, 'J': peopleList };
@@ -3431,6 +3437,7 @@ function normalizeStatus(val) {
   if (v.includes('không tìm') || v.includes('mất') || v.includes('chưa thấy')) return 'Không tìm thấy';
   if (v.includes('thanh lý')) return 'Đã thanh lý';
   if (v.includes('bàn giao trả') || v.includes('bàn giao')) return 'Đã bàn giao trả';
+  if (v.includes('lưu kho') || v.includes('kho')) return 'Lưu kho';
   return val; // không match → giữ nguyên raw
 }
 
@@ -3994,7 +4001,7 @@ function handleRowClick(e, idx) {
 
 const INLINE_READONLY = new Set(['A','B']);
 const INLINE_STATUS_OPTS = [
-  'Đang hoạt động','Hỏng','Không tìm thấy','Đã thanh lý','Đã bàn giao trả','Chưa xác định'
+  'Đang hoạt động','Hỏng','Không tìm thấy','Đã thanh lý','Đã bàn giao trả','Lưu kho'
 ];
 
 function handleCellDblClick(e, rowIdx, colKey) {
