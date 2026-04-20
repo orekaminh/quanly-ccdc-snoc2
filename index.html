@@ -1766,6 +1766,22 @@ function parseDeviceInfo(code) {
     return info;
   }
 
+  // ── QR hãng dạng số/tên-model/SERIAL (HP, Canon, Lenovo...) ──
+  // VD: "80222022289074/HP-LaserJet Pro 400/PHKCG22364"
+  const slashParts = code.split('/');
+  if (slashParts.length >= 2) {
+    const lastPart = slashParts[slashParts.length - 1].trim();
+    if (/^[A-Za-z0-9\-_]{4,30}$/.test(lastPart)) {
+      info.serial = lastPart;
+      // Thử trích tên model từ phần giữa
+      if (slashParts.length >= 3) {
+        const modelPart = slashParts.slice(1, -1).join('/').trim();
+        if (modelPart) info.model = modelPart;
+      }
+      return info;
+    }
+  }
+
   // ── plain serial ──
   info.serial = code.trim();
   return info;
