@@ -453,8 +453,10 @@
   @keyframes shimmer { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
 
   /* ====== FOOTER ====== */
-  .footer { padding: 6px 16px; background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .footer { padding: 6px 16px; background: var(--bg-panel); border-top: 1px solid var(--border-light); display: flex; align-items: center; gap: 16px; font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); }
   .footer-item { display: flex; align-items: center; gap: 6px; }
+  .footer-link { color: var(--accent2); text-decoration: none; transition: color 0.15s; font-weight: 500; }
+  .footer-link:hover { color: var(--accent); text-shadow: 0 0 8px rgba(var(--accent-rgb),0.5); }
 
   /* ====== SCAN BTN ====== */
   .scan-btn { display: flex; align-items: center; gap: 6px; background: transparent; border: 1px solid var(--accent2); color: var(--accent); font-size: 13px; width: 34px; height: 34px; border-radius: var(--radius); cursor: pointer; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
@@ -1169,9 +1171,10 @@
     </div>
 
     <div class="footer">
-      <div class="footer-item"><span>📄</span> <span id="footerSheet">CCDC-TSCD</span></div>
-      <div class="footer-item"><span>🔗</span> <a id="footerSheetLink" href="#" target="_blank" style="color:var(--text-muted);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">Google Sheets</a></div>
-      <div class="footer-item" style="margin-left:auto"><span id="footerDataInfo">—</span></div>
+      <div class="footer-item"><span>📄</span> <span id="footerSheet" style="color:var(--text-primary);font-weight:600">CCDC-TSCD</span></div>
+      <div style="width:1px;height:12px;background:var(--border-light);opacity:0.6"></div>
+      <div class="footer-item"><span>🔗</span> <a id="footerSheetLink" href="#" target="_blank" class="footer-link">Google Sheets</a></div>
+      <div class="footer-item" style="margin-left:auto;color:var(--text-secondary)"><span id="footerDataInfo">—</span></div>
     </div>
   </main>
 </div>
@@ -1562,28 +1565,8 @@ function onBarcodeFound(code, format) {
       const statusEl = document.getElementById('scannerStatus');
       statusEl.innerHTML = `<span style="animation:spin 1s linear infinite;display:inline-block">⟳</span>&nbsp; Đang tìm mã Barcode... <span style="opacity:0.55;font-size:10px">(bỏ qua: ${code})</span>`;
       // Tiếp tục quét
-      if (codeReader && codeReader.decodeFromVideoElement) { /* ZXing tự loop */ }
-      else { /* canvas mode: tiếp tục tick bằng cách set lại scannerActive */ }
+      // ZXing tự loop; canvas mode: vòng tick() trong startCanvasDecode vẫn đang chạy — chỉ cần return
       scannerActive = true;
-      const video = document.getElementById('scannerVideo');
-      if (video && !codeReader) {
-        // canvas mode — gọi lại startCanvasDecode
-        const detector = new BarcodeDetector({ formats: ['code_128','code_39','ean_13','ean_8','qr_code','data_matrix','itf','upc_a','upc_e'] });
-        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-        (function tick() {
-          if (!scannerActive || !video.videoWidth) { if (scannerActive) requestAnimationFrame(tick); return; }
-          canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx.drawImage(video, 0, 0);
-          detector.detect(canvas).then(codes => {
-            if (!scannerActive) return;
-            if (codes.length > 0) {
-              const p1D = ['code_128','code_39','ean_13','ean_8','upc_a','upc_e','itf'];
-              const serialMatch = codes.find(c => allData && allData.some(r => r.F && r.F.trim().toUpperCase() === (c.rawValue||'').trim().toUpperCase()));
-              const best = serialMatch || codes.find(c => p1D.includes((c.format||'').toLowerCase())) || codes[0];
-              onBarcodeFound(best.rawValue, best.format);
-            } else requestAnimationFrame(tick);
-          }).catch(() => { if (scannerActive) requestAnimationFrame(tick); });
-        })();
-      }
       return; // không dừng, không hiện kết quả
     }
   }
@@ -2904,15 +2887,13 @@ async function saveEdit() {
     }
     if (newVal !== oldVal) updates[key] = newVal;
   });
-  // Xử lý ô nhập tự do của dynamic select (chỉ ghi đè nếu dropdown đang trống)
+  // Xử lý ô nhập tự do của dynamic select — giá trị nhập tay luôn thắng dropdown
   document.querySelectorAll('#editFormBody [data-editkey-extra]').forEach(el => {
     const key = el.getAttribute('data-editkey-extra');
     const val = el.value.replace(/\r/g,'').trim();
     if (!val) return;
-    // Chỉ dùng giá trị nhập tay nếu dropdown tương ứng chưa có giá trị được chọn
-    const selectEl = document.querySelector(`#editFormBody [data-key="${key}"]`);
-    const selectHasValue = selectEl && selectEl.tagName === 'SELECT' && selectEl.value !== '';
-    if (!selectHasValue) updates[key] = val;
+    // Nhập tay có giá trị → ghi đè bất kể dropdown đang chọn gì
+    updates[key] = val;
   });
   if (!Object.keys(updates).length) { showToast('Không có thay đổi nào', 'info'); closeEdit(); return; }
   const saveBtn = document.getElementById('saveBtn'); const statusEl = document.getElementById('saveStatus');
@@ -3070,11 +3051,11 @@ async function saveNewAsset() {
     if (val) newData[key] = val;
   });
 
-  // select-dynamic: nếu dropdown để trống nhưng input nhập tay có giá trị → dùng giá trị đó
+  // select-dynamic: nếu input nhập tay có giá trị → luôn dùng giá trị đó (thắng dropdown)
   document.querySelectorAll('#addFormBody [data-addkey-extra]').forEach(el => {
     const key = el.getAttribute('data-addkey-extra');
     const val = el.value.trim();
-    if (val && !newData[key]) newData[key] = val;
+    if (val) newData[key] = val;
   });
 
   if (!newData.D) { showToast('⚠️ Vui lòng nhập Tên TSCĐ / Thiết bị', 'warn'); return; }
