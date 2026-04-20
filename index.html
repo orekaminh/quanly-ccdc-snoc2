@@ -608,7 +608,7 @@
     .header-title { font-size:13px; }
     .sidebar { position:fixed; top:0; left:0; bottom:0; width:280px; z-index:200; transform:translateX(-100%); transition:transform 0.28s cubic-bezier(0.4,0,0.2,1),box-shadow 0.28s ease; box-shadow:none; overflow-y:auto; display:flex; }
     .sidebar.open { transform:translateX(0); box-shadow:8px 0 40px rgba(0,0,0,0.5); }
-    .layout { height:calc(100vh - 52px); }
+    .layout { height:calc(100vh - 52px); overflow-x: hidden; }
     .main { width:100%; }
     .toolbar { padding:8px 10px; gap:6px; flex-wrap:wrap; overflow:visible; }
     .search-wrap { flex:1 1 calc(100% - 48px); max-width:100%; min-width:unset; order:1; }
@@ -623,9 +623,9 @@
     .view-tab { padding:8px 12px; font-size:12px; }
     .record-count { order:99; width:100%; margin-left:0; text-align:right; padding:2px 0; }
     .table-wrap { -webkit-overflow-scrolling:touch; }
-    .layout { overflow-x: hidden; }
     .sidebar:not(.open) { border-right: none; }
     .data-table { font-size:11px; }
+
     .data-table td,.th-inner { padding:8px 8px; }
     .data-table td { min-height:40px; }
     .td-action { min-width:40px; padding:8px; }
@@ -1788,7 +1788,7 @@ function parseDeviceInfo(code) {
 }
 
 // Áp dụng kết quả quét vào form thêm mới
-// ====== SERIAL SCAN — hàm chung (fix: loại bỏ duplicate ~55 dòng) ======
+// ====== SERIAL SCAN — hàm chung ======
 // isEditForm=true  → dùng selector #editFormBody [data-key] + [data-editkey-extra]
 // isEditForm=false → dùng selector #addFormBody  [data-addkey] + [data-addkey-extra]
 function _applySerialScanToForm(isEditForm) {
@@ -2274,7 +2274,6 @@ let sheetHeaders = {};
 // ====== SYNC ======
 function syncData(silent = false) {
   if (_aggregateMode) { syncAggregate(); return; }
-  // FIX: cập nhật cả nút desktop và mobile
   const btns = [document.getElementById('syncBtn'), document.getElementById('syncBtnMobile')];
   const dot = document.getElementById('syncDot');
   if (!silent) {
@@ -2310,7 +2309,6 @@ function syncData(silent = false) {
       if (confirmed) { delete _pendingEdits[assetId]; savePendingEdits(); }
       else Object.assign(row, pending);
     });
-    // FIX: khôi phục giá trị filter trước khi rebuild dropdowns
     updateStats(); buildTypeFilters();
     buildPersonFilter(); buildBrandFilter(); buildYearFilter(); buildYearStats();
     // Khôi phục filter từ URL (chỉ lần đầu load)
@@ -2465,17 +2463,7 @@ function restoreFiltersFromURL() {
 
 // ====== FILTERS ======
 function applyFilters() {
-  // Cập nhật has-value CSS cho các input filter (border highlight)
-  const q = document.getElementById('searchInput').value;
-  const personF = document.getElementById('personFilter').value;
-  const brandF = document.getElementById('brandFilter').value;
-  const yearF = document.getElementById('yearFilter').value;
-  document.getElementById('searchInput').classList.toggle('has-value', !!q);
-  document.getElementById('personFilter').classList.toggle('has-value', !!personF);
-  document.getElementById('brandFilter').classList.toggle('has-value', !!brandF);
-  document.getElementById('yearFilter')?.classList.toggle('has-value', !!yearF);
-  // Delegate toàn bộ logic lọc sang applyFiltersWithType để tránh duplicate
-  // và đảm bảo _typeFilter / _statusFilter luôn được áp dụng
+  // has-value CSS và toàn bộ logic lọc được xử lý trong applyFiltersWithType()
   applyFiltersWithType();
 }
 
@@ -3433,7 +3421,6 @@ function buildTypeFilters() {
     </div>`).join('');
 }
 
-// FIX: filterByType dùng state riêng thay vì gán vào searchInput
 let _typeFilter = '';
 let _statusFilter = '';
 
@@ -3609,7 +3596,6 @@ function selectYearFilter(yr) {
   applyFiltersWithType();
 }
 
-// FIX: buildPersonFilter/buildBrandFilter giữ nguyên giá trị đang chọn
 function buildPersonFilter() {
   const currentVal = document.getElementById('personFilter').value;
   const people = [...new Set(allData.map(r=>r.J).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
@@ -4392,7 +4378,6 @@ function toggleSidebar() {
   });
 })();
 
-// FIX: Gộp tất cả keydown handler thành 1 handler duy nhất
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (document.getElementById('auditOverlay').classList.contains('open'))    { closeAuditLog(); return; }
@@ -4528,4 +4513,4 @@ function initAdaptiveToolbar() {
 </div>
 
 </body>
-</html></html>
+</html>
