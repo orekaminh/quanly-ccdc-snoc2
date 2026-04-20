@@ -1615,20 +1615,30 @@ function onBarcodeFound(code, format) {
       internalAssetId = slashParts[1].trim();
     }
 
+    // ── Tầng 1b: QR hãng dạng số/tên-model/SERIAL (HP, Canon, Lenovo...) ──
+    // VD: "80222022289074/HP-LaserJet Pro 400/PHKCG22364"
+    let extractedSerialFromSlash = null;
+    if (!internalAssetId && slashParts.length >= 2) {
+      const lastPart = slashParts[slashParts.length - 1].trim();
+      if (/^[A-Za-z0-9\-_]{4,30}$/.test(lastPart)) extractedSerialFromSlash = lastPart;
+    }
+
     // ── Tầng 2: trích serial từ URL hãng hoặc key=value ──
     // VD: "https://support.hp.com/...?sn=6CM6200JS8" hoặc "SN:6CM6200JS8 PN:L1234A"
-    let extractedSerial = null;
-    const snPatterns = [
-      /[?&]sn=([A-Za-z0-9\-_]{4,30})/i,
-      /[?&]serial=([A-Za-z0-9\-_]{4,30})/i,
-      /[?&]serialnumber=([A-Za-z0-9\-_]{4,30})/i,
-      /SN[:\s=]+([A-Za-z0-9\-_]{4,30})/i,
-      /S\/N[:\s=]+([A-Za-z0-9\-_]{4,30})/i,
-      /Serial[:\s=]+([A-Za-z0-9\-_]{4,30})/i,
-    ];
-    for (const pat of snPatterns) {
-      const m = code.match(pat);
-      if (m) { extractedSerial = m[1].trim(); break; }
+    let extractedSerial = extractedSerialFromSlash;
+    if (!extractedSerial) {
+      const snPatterns = [
+        /[?&]sn=([A-Za-z0-9\-_]{4,30})/i,
+        /[?&]serial=([A-Za-z0-9\-_]{4,30})/i,
+        /[?&]serialnumber=([A-Za-z0-9\-_]{4,30})/i,
+        /SN[:\s=]+([A-Za-z0-9\-_]{4,30})/i,
+        /S\/N[:\s=]+([A-Za-z0-9\-_]{4,30})/i,
+        /Serial[:\s=]+([A-Za-z0-9\-_]{4,30})/i,
+      ];
+      for (const pat of snPatterns) {
+        const m = code.match(pat);
+        if (m) { extractedSerial = m[1].trim(); break; }
+      }
     }
 
     // ── Tầng 3: nếu code ngắn gọn (không có / hay http) → có thể là barcode serial thuần ──
@@ -1694,6 +1704,10 @@ function applyScannedCode() {
   const qrParts = lastScannedCode.split('/');
   if (qrParts.length >= 2 && /^[A-Z]{2,6}$/.test(qrParts[0].trim())) {
     searchTerm = qrParts[1].trim(); // QR nội bộ: lấy assetId
+  } else if (qrParts.length >= 2) {
+    // QR hãng dạng số/tên-model/SERIAL (HP, Canon...) → lấy phần cuối
+    const lastPart = qrParts[qrParts.length - 1].trim();
+    if (/^[A-Za-z0-9\-_]{4,30}$/.test(lastPart)) searchTerm = lastPart;
   } else {
     // Thử trích serial từ URL/key-value
     const snM = lastScannedCode.match(/(?:[?&]sn=|\bSN[:\s=]+|\bS\/N[:\s=]+|\bSerial[:\s=]+)([A-Za-z0-9\-_]{4,30})/i);
