@@ -734,9 +734,75 @@
   .qr-btn-close { background:var(--bg-card); border-color:var(--border); color:var(--text-secondary); }
   .qr-btn-close:hover { border-color:var(--border-light); color:var(--text-primary); }
 
-  /* ====== ADD NEW MODAL ====== */
+  /* ====== ADD NEW MODAL (mobile) ====== */
   .add-overlay { display:none; position:fixed; inset:0; z-index:1050; background:rgba(0,0,0,0.75); align-items:center; justify-content:center; }
   .add-overlay.open { display:flex; }
+
+  /* ====== ADD NEW DRAWER (desktop only) ====== */
+  .add-drawer-backdrop {
+    display:none; position:fixed; inset:0; z-index:1048;
+    background:rgba(0,0,0,0.55); backdrop-filter:blur(2px);
+    opacity:0; transition:opacity 0.3s ease;
+  }
+  .add-drawer-backdrop.open { display:block; opacity:1; }
+
+  .add-drawer {
+    position:fixed; top:0; right:-660px; width:640px; height:100vh;
+    z-index:1049; background:var(--bg-panel);
+    border-left:1px solid var(--border-light);
+    box-shadow:-12px 0 48px rgba(0,0,0,0.5), -2px 0 0 rgba(100,255,218,0.06);
+    display:flex; flex-direction:column;
+    transition:right 0.32s cubic-bezier(0.4,0,0.2,1);
+  }
+  .add-drawer.open { right:0; }
+
+  .add-drawer-header {
+    padding:18px 22px 14px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    flex-shrink:0; background:var(--bg-panel);
+    position:sticky; top:0; z-index:2;
+  }
+  .add-drawer-title-row { display:flex; align-items:center; gap:10px; }
+  .add-drawer-badge {
+    font-family:var(--font-mono); font-size:10px; font-weight:700;
+    padding:3px 9px; border-radius:4px; letter-spacing:0.5px;
+    background:rgba(100,255,218,0.12); color:var(--success);
+    border:1px solid rgba(100,255,218,0.3);
+  }
+  .add-drawer-title { font-size:15px; font-weight:700; color:var(--text-primary); }
+  .add-drawer-sub { font-size:11px; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px; }
+
+  .add-drawer-body {
+    flex:1; overflow-y:auto; padding:18px 22px;
+    scrollbar-width:thin; scrollbar-color:var(--border-light) transparent;
+  }
+  .add-drawer-body::-webkit-scrollbar { width:5px; }
+  .add-drawer-body::-webkit-scrollbar-thumb { background:var(--border-light); border-radius:10px; }
+
+  .add-drawer-footer {
+    padding:14px 22px; border-top:1px solid var(--border);
+    display:flex; gap:10px; align-items:center; flex-shrink:0;
+    background:var(--bg-panel);
+  }
+
+  /* 2-column grid bên trong drawer */
+  .drawer-group { margin-bottom:22px; }
+  .drawer-group-title {
+    font-family:var(--font-mono); font-size:10px; letter-spacing:1px;
+    color:var(--accent); font-weight:700; text-transform:uppercase;
+    margin-bottom:12px; padding-bottom:7px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:7px;
+  }
+  .drawer-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:14px 18px;
+  }
+  .drawer-field { display:flex; flex-direction:column; gap:5px; }
+  .drawer-field.span2 { grid-column:1 / -1; }
+  .drawer-field-label {
+    font-size:11px; color:var(--text-secondary); font-weight:500;
+    display:flex; align-items:center; gap:4px;
+  }
+  .drawer-field-label .req { color:var(--danger); font-size:13px; line-height:1; }
 
   /* ====== DEPT SELECTOR ====== */
   /* Luôn dùng dark theme bất kể setting người dùng */
@@ -1254,6 +1320,27 @@
       <button class="toolbar-btn" onclick="closeAddNew()" style="flex:0 0 auto">Hủy</button>
       <span id="addStatus" style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)"></span>
     </div>
+  </div>
+</div>
+
+<!-- Desktop Add Drawer -->
+<div class="add-drawer-backdrop" id="addDrawerBackdrop" onclick="closeAddNew()"></div>
+<div class="add-drawer" id="addDrawer">
+  <div class="add-drawer-header">
+    <div>
+      <div class="add-drawer-title-row">
+        <span class="add-drawer-badge">MỚI</span>
+        <span class="add-drawer-title">➕ Thêm tài sản / thiết bị mới</span>
+      </div>
+      <div class="add-drawer-sub">STT và Mã TS sẽ được tự động sinh · Trường <span style="color:var(--danger)">*</span> là bắt buộc</div>
+    </div>
+    <button class="modal-close" onclick="closeAddNew()">✕</button>
+  </div>
+  <div class="add-drawer-body" id="addDrawerBody"></div>
+  <div class="add-drawer-footer">
+    <button class="toolbar-btn success-btn" id="addDrawerSaveBtn" onclick="saveNewAsset()" style="flex:1;justify-content:center;padding:10px;font-size:13px">✅ Thêm vào Google Sheet</button>
+    <button class="toolbar-btn" onclick="closeAddNew()" style="padding:10px 18px">Hủy</button>
+    <span id="addDrawerStatus" style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)"></span>
   </div>
 </div>
 
@@ -1791,7 +1878,7 @@ function _applySerialScanToForm(isEditForm) {
     S: info.ip,
     X: info.mac,
   };
-  const formId   = isEditForm ? 'editFormBody' : 'addFormBody';
+  const formId   = isEditForm ? 'editFormBody' : (window.innerWidth > 768 ? 'addDrawerBody' : 'addFormBody');
   const keyAttr  = isEditForm ? 'data-key'          : 'data-addkey';
   const extraAttr= isEditForm ? 'data-editkey-extra' : 'data-addkey-extra';
 
@@ -2152,6 +2239,17 @@ function openDeptSelector() {
 }
 
 // ====== UTILS ======
+
+// Deduplicate list case-insensitively, giữ giá trị gặp đầu tiên, sort không phân biệt hoa thường
+function dedupeList(arr) {
+  const seen = new Map();
+  arr.filter(Boolean).forEach(v => {
+    const k = v.trim().toLowerCase();
+    if (!seen.has(k)) seen.set(k, v.trim());
+  });
+  return [...seen.values()].sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
+}
+
 function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -2641,9 +2739,10 @@ function handleDetailDblClick(e, colKey) {
   const originalHTML = div.innerHTML;
   const isStatus = colKey === 'I';
   const dynamicLists = {
-    'D': [...new Set(allData.map(r=>r.D).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
-    'E': [...new Set(allData.map(r=>r.E).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
-    'J': [...new Set(allData.map(r=>r.J).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+    'C': dedupeList(allData.map(r=>r.C)),
+    'D': dedupeList(allData.map(r=>r.D)),
+    'E': dedupeList(allData.map(r=>r.E)),
+    'J': dedupeList(allData.map(r=>r.J)),
   };
   const normalizedCurrent = isStatus ? normalizeStatus(currentVal) : currentVal;
 
@@ -2792,9 +2891,10 @@ function openEdit() {
 
   // Lists động (đồng bộ với form Thêm mới)
   const _editDynamicLists = {
-    'D': [...new Set(allData.map(r=>r.D).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
-    'E': [...new Set(allData.map(r=>r.E).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
-    'J': [...new Set(allData.map(r=>r.J).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+    'C': dedupeList(allData.map(r=>r.C)),
+    'D': dedupeList(allData.map(r=>r.D)),
+    'E': dedupeList(allData.map(r=>r.E)),
+    'J': dedupeList(allData.map(r=>r.J)),
   };
   const DATE_EDIT_KEYS = new Set(['G','Z']);
 
@@ -2949,8 +3049,8 @@ function groupIcon(g) {
 
 function openAddNew() {
   // Lists động từ dữ liệu thực tế
-  const peopleList = [...new Set(allData.map(r => r.J).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
-  const brandList  = [...new Set(allData.map(r => r.E).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
+  const peopleList = dedupeList(allData.map(r => r.J));
+  const brandList  = dedupeList(allData.map(r => r.E));
 
   // Cấu hình loại trường
   const DATE_KEYS     = new Set(['G', 'Z']);
@@ -2959,8 +3059,9 @@ function openAddNew() {
   const FIXED_SELECT  = {
     'I': ['Đang hoạt động', 'Hỏng', 'Không tìm thấy', 'Đã thanh lý', 'Đã bàn giao trả', 'Lưu kho']
   };
-  const nameList   = [...new Set(allData.map(r => r.D).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
-  const DYNAMIC_SELECT = { 'D': nameList, 'E': brandList, 'J': peopleList };
+  const nameList    = dedupeList(allData.map(r => r.D));
+  const projectList = dedupeList(allData.map(r => r.C));
+  const DYNAMIC_SELECT = { 'C': projectList, 'D': nameList, 'E': brandList, 'J': peopleList };
   const HINTS = { H:'1', S:'x.x.x.x', T:'x.x.x.x', R:'x.x.x.x', X:'xx:xx:xx:xx:xx:xx' };
 
   // Nhóm cột theo group, bỏ A (STT) và B (ID - auto sinh)
@@ -3032,21 +3133,100 @@ function openAddNew() {
     html += '</div>';
   });
 
-  document.getElementById('addFormBody').innerHTML = html;
-  document.getElementById('addStatus').textContent = '';
-  document.getElementById('addOverlay').classList.add('open');
+  if (window.innerWidth > 768) {
+    // ===== DESKTOP: Drawer với 2-column grid =====
+    let drawerHtml = `<div style="background:rgba(100,255,218,0.06);border:1px solid rgba(100,255,218,0.2);border-radius:6px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--success)">
+      ✅ Điền thông tin tài sản mới bên dưới. Các trường bỏ trống sẽ được bỏ qua.
+    </div>`;
+
+    // TEXTAREA_KEYS và FULL_WIDTH_KEYS — luôn span 2 cột
+    const FULL_SPAN_KEYS = new Set([...TEXTAREA_KEYS, 'C', 'D', 'F', 'L', 'AA', 'AC', 'AD', 'Y', 'AE', 'AF']);
+
+    Object.entries(groups).forEach(([groupName, items]) => {
+      drawerHtml += `<div class="drawer-group">
+        <div class="drawer-group-title">${groupIcon(groupName)} ${groupName}</div>
+        <div class="drawer-grid">`;
+
+      items.forEach(({ col, idx }) => {
+        const key = col.key;
+        const label = getColLabel(col, idx);
+        const required = REQUIRED_KEYS.has(key);
+        const isSpan2 = FULL_SPAN_KEYS.has(key) || DYNAMIC_SELECT[key];
+        let input = '';
+
+        if (FIXED_SELECT[key]) {
+          const opts = FIXED_SELECT[key].map(o => `<option value="${escHtml(o)}">${escHtml(o)}</option>`).join('');
+          input = `<select class="edit-select" data-addkey="${key}"><option value="">— Chọn —</option>${opts}</select>`;
+        } else if (DYNAMIC_SELECT[key]) {
+          const opts = DYNAMIC_SELECT[key].map(o => `<option value="${escHtml(o)}">${escHtml(o)}</option>`).join('');
+          input = `<div style="display:flex;gap:6px">
+            <select class="edit-select" data-addkey="${key}" style="flex:1"><option value="">— Chọn từ danh sách —</option>${opts}</select>
+            <input class="edit-input" data-addkey-extra="${key}" type="text" placeholder="Hoặc nhập mới..." style="flex:1;font-size:11px">
+          </div>`;
+        } else if (DATE_KEYS.has(key)) {
+          input = `<input class="edit-input" data-addkey="${key}" data-addtype="date" type="date">`;
+        } else if (TEXTAREA_KEYS.has(key)) {
+          input = `<textarea class="edit-textarea" data-addkey="${key}" rows="2" placeholder=""></textarea>`;
+        } else if (key === 'F') {
+          input = `<div style="display:flex;gap:6px;align-items:center">
+            <input class="edit-input" data-addkey="F" type="text" placeholder="S/N hoặc quét barcode..." style="flex:1;font-family:var(--font-mono)">
+            <button type="button" onclick="openScannerForSerial()" title="Quét barcode / QR"
+              style="flex-shrink:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+              background:transparent;border:1px solid var(--accent2);color:var(--accent);border-radius:var(--radius);
+              cursor:pointer;font-size:13px;transition:all 0.2s"
+              onmouseover="this.style.background='rgba(0,212,255,0.12)'" onmouseout="this.style.background='transparent'">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/>
+                <path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/>
+                <line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="17" y2="12"/><line x1="12" y1="7" x2="12" y2="17"/>
+              </svg>
+            </button>
+          </div>`;
+        } else {
+          input = `<input class="edit-input" data-addkey="${key}" type="text"
+            placeholder="${escHtml(HINTS[key] || '')}"
+            ${required ? 'style="border-color:rgba(0,230,118,0.4)"' : ''}>`;
+        }
+
+        drawerHtml += `<div class="drawer-field ${isSpan2 ? 'span2' : ''}">
+          <div class="drawer-field-label">${escHtml(label)}${required ? ' <span class="req">*</span>' : ''}</div>
+          ${input}
+        </div>`;
+      });
+
+      drawerHtml += `</div></div>`;
+    });
+
+    document.getElementById('addDrawerBody').innerHTML = drawerHtml;
+    document.getElementById('addDrawerStatus').textContent = '';
+    document.getElementById('addDrawerBackdrop').classList.add('open');
+    document.getElementById('addDrawer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  } else {
+    // ===== MOBILE: modal overlay như cũ =====
+    document.getElementById('addFormBody').innerHTML = html;
+    document.getElementById('addStatus').textContent = '';
+    document.getElementById('addOverlay').classList.add('open');
+  }
 }
 
 function closeAddNew(e) {
   if (!e || e.target === document.getElementById('addOverlay'))
     document.getElementById('addOverlay').classList.remove('open');
+  if (!e || e.target === document.getElementById('addDrawerBackdrop')) {
+    document.getElementById('addDrawer').classList.remove('open');
+    document.getElementById('addDrawerBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  }
 }
 
 async function saveNewAsset() {
+  const isDesktop = window.innerWidth > 768;
+  const formSelector = isDesktop ? '#addDrawerBody' : '#addFormBody';
   const newData = {};
 
   // Thu thập tất cả trường select/input có data-addkey
-  document.querySelectorAll('#addFormBody [data-addkey]').forEach(el => {
+  document.querySelectorAll(`${formSelector} [data-addkey]`).forEach(el => {
     const key = el.getAttribute('data-addkey');
     let val = el.value.trim();
     // Convert date YYYY-MM-DD → DD/MM/YYYY
@@ -3058,7 +3238,7 @@ async function saveNewAsset() {
   });
 
   // select-dynamic: nếu input nhập tay có giá trị → luôn dùng giá trị đó (thắng dropdown)
-  document.querySelectorAll('#addFormBody [data-addkey-extra]').forEach(el => {
+  document.querySelectorAll(`${formSelector} [data-addkey-extra]`).forEach(el => {
     const key = el.getAttribute('data-addkey-extra');
     const val = el.value.trim();
     if (val) newData[key] = val;
@@ -3067,8 +3247,10 @@ async function saveNewAsset() {
   if (!newData.D) { showToast('⚠️ Vui lòng nhập Tên TSCĐ / Thiết bị', 'warn'); return; }
   if (!APPS_SCRIPT_URL) { showToast('⚠️ Chưa cấu hình APPS_SCRIPT_URL', 'error'); return; }
 
-  const btn = document.getElementById('addSaveBtn');
-  const statusEl = document.getElementById('addStatus');
+  const btnId = isDesktop ? 'addDrawerSaveBtn' : 'addSaveBtn';
+  const statusId = isDesktop ? 'addDrawerStatus' : 'addStatus';
+  const btn = document.getElementById(btnId);
+  const statusEl = document.getElementById(statusId);
   btn.disabled = true; btn.textContent = '⏳ Đang thêm...'; statusEl.textContent = '';
 
   try {
@@ -3586,7 +3768,7 @@ function selectYearFilter(yr) {
 
 function buildPersonFilter() {
   const currentVal = document.getElementById('personFilter').value;
-  const people = [...new Set(allData.map(r=>r.J).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
+  const people = dedupeList(allData.map(r=>r.J));
   const sel = document.getElementById('personFilter');
   sel.innerHTML = '<option value="">— Người quản lý —</option>' + people.map(p => `<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
   if (currentVal) sel.value = currentVal;
@@ -3594,7 +3776,7 @@ function buildPersonFilter() {
 }
 function buildBrandFilter() {
   const currentVal = document.getElementById('brandFilter').value;
-  const brands = [...new Set(allData.map(r=>r.E).filter(Boolean))].sort();
+  const brands = dedupeList(allData.map(r=>r.E));
   const sel = document.getElementById('brandFilter');
   sel.innerHTML = '<option value="">— Hãng sản xuất —</option>' + brands.map(b => `<option value="${escHtml(b)}">${escHtml(b)}</option>`).join('');
   if (currentVal) sel.value = currentVal;
@@ -4020,9 +4202,10 @@ function handleCellDblClick(e, rowIdx, colKey) {
   const isStatus = colKey === 'I';
   // Cột có danh sách gợi ý: dùng <datalist> để vừa gõ tự do vừa chọn
   const dynamicLists = {
-    'D': [...new Set(allData.map(r=>r.D).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
-    'E': [...new Set(allData.map(r=>r.E).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
-    'J': [...new Set(allData.map(r=>r.J).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi')),
+    'C': dedupeList(allData.map(r=>r.C)),
+    'D': dedupeList(allData.map(r=>r.D)),
+    'E': dedupeList(allData.map(r=>r.E)),
+    'J': dedupeList(allData.map(r=>r.J)),
   };
 
   td.innerHTML = '';
@@ -4162,12 +4345,12 @@ function onBulkFieldChange() {
     statusEl.style.display = '';
   } else if (field === 'J') {
     // Populate datalist từ data hiện tại
-    const persons = [...new Set(allData.map(r => r.J).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
+    const persons = dedupeList(allData.map(r => r.J));
     document.getElementById('bulkPersonList').innerHTML = persons.map(p => `<option value="${escHtml(p)}">`).join('');
     personEl.style.display = '';
     personEl.focus();
   } else if (field === 'K') {
-    const locs = [...new Set(allData.map(r => r.K).filter(Boolean))].sort((a,b) => a.localeCompare(b,'vi'));
+    const locs = dedupeList(allData.map(r=>r.K));
     document.getElementById('bulkLocationList').innerHTML = locs.map(l => `<option value="${escHtml(l)}">`).join('');
     locationEl.style.display = '';
     locationEl.focus();
@@ -4374,6 +4557,7 @@ document.addEventListener('keydown', e => {
     if (document.getElementById('kkOverlay').classList.contains('open'))       { closeKiemKe(); return; }
     if (document.getElementById('scannerOverlay').classList.contains('open'))  { closeScanner(); return; }
     if (document.getElementById('addOverlay').classList.contains('open'))      { closeAddNew(); return; }
+    if (document.getElementById('addDrawer').classList.contains('open'))       { closeAddNew(); return; }
     if (document.getElementById('editOverlay').classList.contains('open'))     { closeEdit(); return; }
     if (document.getElementById('modalOverlay').classList.contains('open'))    { closeModal(); return; }
     if (document.getElementById('colPanelOverlay').classList.contains('open')) { closeColPanel(); return; }
